@@ -4,7 +4,7 @@
 **Status:** testing
 
 ## Objective
-Predicting short, medium, and long-term stock movements using High-Frequency Trading (HFT) data. The metric is **Mean Absolute Error (MAE)**.
+--. The metric is **Mean Absolute Error (MAE)**.
 
 ## Project Structure
 
