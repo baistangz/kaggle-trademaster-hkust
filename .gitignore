@@ -3,3 +3,4 @@ data/
 *.zip
 *.csv
 *.npz
+.DS_Store
