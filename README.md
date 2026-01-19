@@ -13,6 +13,8 @@
     * `processed/`: Feature-engineered datasets (NPZ format).
 * `notebooks/`:
     * `solution.ipynb`: The main XGBoost/LightGBM/CatBoost ensemble.
+    * `neuralnetworks.ipynb`: MLP model.
+    * `ensemble.ipynb`: Blend trees and NN.
 * `submissions/`: Final CSVs ready for Kaggle upload.
 
 ## Key Strategies
@@ -23,3 +25,5 @@
 ## How to Run
 1.  Install dependencies: `pip install -r requirements.txt`
 2.  Run `solution.ipynb` to generate the base models.
+3.  Run `neuralnetworks.ipynb` to generate the NN models.
+4.  Run `ensemble.ipynb` to generate the final blended model.
