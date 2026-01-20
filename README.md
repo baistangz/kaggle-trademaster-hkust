@@ -1,10 +1,10 @@
 # TradeMaster Cup 2025 by HKUST(GZ) FinTech Thrust
 
-**Current Best Local CV:** -- | **Leaderboard:** 0.7827  
+**Current Best Local CV:** -- | **Leaderboard:** 0.7888
 **Status:** testing
 
 ## Objective
---. The metric is **Mean Absolute Error (MAE)**.
+Predict future returns across 3 time horizons simultaneously. The metric is **Mean Absolute Error (MAE)**.
 
 ## Project Structure
 
