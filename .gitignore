@@ -4,3 +4,4 @@ data/
 *.csv
 *.npz
 .DS_Store
+*.npy
