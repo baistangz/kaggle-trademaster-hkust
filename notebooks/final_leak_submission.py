@@ -107,7 +107,7 @@ def main() -> None:
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     output_path = args.output_dir / output_name
-    out.to_csv(output_path, index=False)
+    out.to_csv(output_path, index=False, float_format="%.18g")
 
     if not args.skip_train_check:
         train_df = pd.read_csv(args.train)
