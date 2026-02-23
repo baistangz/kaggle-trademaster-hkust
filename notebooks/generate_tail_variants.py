@@ -175,14 +175,14 @@ def main() -> None:
     base = base[["id", *TARGET_COLS]]
     save_submission(out_dir / f"submission_TAILVAR_BASE_FALLBACK_{ts}.csv", sample_df["id"], base)
 
-    # 2) Leak + zero fill for tail.
-    zero = perfect.copy()
-    zero[TARGET_COLS] = zero[TARGET_COLS].fillna(0.0)
-    save_submission(out_dir / f"submission_TAILVAR_ZERO_{ts}.csv", sample_df["id"], zero)
+    # # 2) Leak + zero fill for tail.
+    # zero = perfect.copy()
+    # zero[TARGET_COLS] = zero[TARGET_COLS].fillna(0.0)
+    # save_submission(out_dir / f"submission_TAILVAR_ZERO_{ts}.csv", sample_df["id"], zero)
 
     # 3+) Leak + coherent f16 extrapolation methods.
     patched_by_method = {}
-    for method in ["ar1", "ar5", "lag240", "lag480", "last"]:
+    for method in ["zero", "ar1", "ar5", "lag240", "lag480", "last"]:
         patched = patch_tail_from_future_f16(test_df, perfect, method=method)
         patched_by_method[method] = patched
         save_submission(out_dir / f"submission_TAILVAR_{method.upper()}_{ts}.csv", sample_df["id"], patched)
