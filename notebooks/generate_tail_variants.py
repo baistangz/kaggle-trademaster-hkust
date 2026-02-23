@@ -29,10 +29,25 @@ def base_perfect(test_df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def extrapolate_future_f16(f16: np.ndarray, method: str, horizon: int = 240) -> np.ndarray:
+def extrapolate_future_f16(
+    f16: np.ndarray,
+    method: str,
+    horizon: int = 240,
+    *,
+    minute_id: np.ndarray | None = None,
+    minute_mean_by_minute: np.ndarray | None = None,
+) -> np.ndarray:
     x = np.asarray(f16, dtype="float64")
     if method == "zero":
         return np.zeros(horizon, dtype="float64")
+    if method == "expanding_all":
+        if minute_id is None or minute_mean_by_minute is None:
+            raise ValueError("minute_id and minute_mean_by_minute are required for method='expanding_all'")
+        if len(minute_mean_by_minute) != 240:
+            raise ValueError("minute_mean_by_minute must have length 240")
+        last_minute = int(minute_id[-1])
+        future_minutes = (last_minute + np.arange(1, horizon + 1)) % 240
+        return np.asarray(minute_mean_by_minute[future_minutes], dtype="float64")
     if method == "last":
         return np.repeat(x[-1], horizon).astype("float64")
     if method == "lag240":
@@ -85,11 +100,23 @@ def extrapolate_future_f16(f16: np.ndarray, method: str, horizon: int = 240) -> 
     raise ValueError(f"Unknown method: {method}")
 
 
-def patch_tail_from_future_f16(test_df: pd.DataFrame, perfect: pd.DataFrame, method: str) -> pd.DataFrame:
+def patch_tail_from_future_f16(
+    test_df: pd.DataFrame,
+    perfect: pd.DataFrame,
+    method: str,
+    minute_mean_by_minute: np.ndarray | None = None,
+) -> pd.DataFrame:
     out = perfect.copy()
     f16 = test_df["feature_16"].to_numpy(dtype="float64")
+    minute_id = test_df["minute_id"].to_numpy(dtype="int64")
     n = len(f16)
-    future = extrapolate_future_f16(f16, method=method, horizon=240)
+    future = extrapolate_future_f16(
+        f16,
+        method=method,
+        horizon=240,
+        minute_id=minute_id,
+        minute_mean_by_minute=minute_mean_by_minute,
+    )
 
     # Patch short NaNs (last 10 rows).
     for i in range(n - 10, n):
@@ -155,6 +182,7 @@ def blend_tail(base: pd.DataFrame, alt: pd.DataFrame, alpha: float) -> pd.DataFr
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
     test_path = root / "data/raw/test_v2.csv"
+    train_path = root / "data/raw/train_v2.csv"
     sample_path = root / "data/raw/sample_submission.csv"
     # --- UPDATED FALLBACK TO YOUR LATEST MODEL ---
     fallback_path = root / "submissions/submission_Ensemble_Ref50_Rob50_CV0.67173_20260223_154015.csv"
@@ -162,9 +190,13 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     test_df = pd.read_csv(test_path)
+    train_df = pd.read_csv(train_path, usecols=["minute_id", "feature_16"])
     sample_df = pd.read_csv(sample_path)
     perfect = base_perfect(test_df)
     fallback = load_submission(fallback_path)
+    minute_mean_by_minute = (
+        train_df.groupby("minute_id")["feature_16"].mean().reindex(range(240)).fillna(0.0).to_numpy(dtype="float64")
+    )
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -182,8 +214,13 @@ def main() -> None:
 
     # 3+) Leak + coherent f16 extrapolation methods.
     patched_by_method = {}
-    for method in ["zero", "ar1", "ar5", "lag240", "lag480", "last"]:
-        patched = patch_tail_from_future_f16(test_df, perfect, method=method)
+    for method in ["zero", "expanding_all", "ar1", "ar5", "lag240", "lag480", "last"]:
+        patched = patch_tail_from_future_f16(
+            test_df,
+            perfect,
+            method=method,
+            minute_mean_by_minute=minute_mean_by_minute,
+        )
         patched_by_method[method] = patched
         save_submission(out_dir / f"submission_TAILVAR_{method.upper()}_{ts}.csv", sample_df["id"], patched)
 
