@@ -73,7 +73,10 @@ def main() -> None:
     parser.add_argument("--test", type=Path, default=root / "data/raw/test_v2.csv")
     parser.add_argument("--train", type=Path, default=root / "data/raw/train_v2.csv")
     parser.add_argument("--sample", type=Path, default=root / "data/raw/sample_submission.csv")
-    parser.add_argument("--fallback", type=Path, default=None, help="Optional fallback submission for tail NaNs.")
+    # Hardcoded fallback model
+    parser.add_argument("--fallback", type=Path, 
+                        default=root / "submissions" / "submission_Ensemble_Ref50_Rob50_CV0.67173_20260223_154015.csv", 
+                        help="Optional fallback submission for tail NaNs.")
     parser.add_argument("--output-dir", type=Path, default=root / "submissions")
     parser.add_argument("--output-name", type=str, default=None)
     parser.add_argument("--skip-train-check", action="store_true")
