@@ -156,7 +156,8 @@ def main() -> None:
     root = Path(__file__).resolve().parents[1]
     test_path = root / "data/raw/test_v2.csv"
     sample_path = root / "data/raw/sample_submission.csv"
-    fallback_path = root / "submissions/submission_Ensemble_Ref75_Rob25_CV0.67241_20260222_033917.csv"
+    # --- UPDATED FALLBACK TO YOUR LATEST MODEL ---
+    fallback_path = root / "submissions/submission_Ensemble_Ref50_Rob50_CV0.67173_20260223_154015.csv"
     out_dir = root / "submissions"
     out_dir.mkdir(parents=True, exist_ok=True)
 
