@@ -184,8 +184,8 @@ def main() -> None:
     test_path = root / "data/raw/test_v2.csv"
     train_path = root / "data/raw/train_v2.csv"
     sample_path = root / "data/raw/sample_submission.csv"
-    # --- UPDATED FALLBACK TO YOUR LATEST MODEL ---
-    fallback_path = root / "submissions/submission_Ensemble_Ref50_Rob50_CV0.67173_20260223_154015.csv"
+    # --- KEPT ONLY FOR OPTIONAL EXPERIMENTS ---
+    # fallback_path = root / "submissions/submission_Ensemble_Ref50_Rob50_CV0.67173_20260223_154015.csv"
     out_dir = root / "submissions"
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -193,28 +193,29 @@ def main() -> None:
     train_df = pd.read_csv(train_path, usecols=["minute_id", "feature_16"])
     sample_df = pd.read_csv(sample_path)
     perfect = base_perfect(test_df)
-    fallback = load_submission(fallback_path)
+    # fallback = load_submission(fallback_path)
     minute_mean_by_minute = (
         train_df.groupby("minute_id")["feature_16"].mean().reindex(range(240)).fillna(0.0).to_numpy(dtype="float64")
     )
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    # 1) Baseline: leak + model fallback.
-    base = perfect.merge(fallback, on="id", how="left", suffixes=("", "_fb"))
-    for c in TARGET_COLS:
-        base[c] = base[c].combine_first(base[f"{c}_fb"])
-    base = base[["id", *TARGET_COLS]]
-    save_submission(out_dir / f"submission_TAILVAR_BASE_FALLBACK_{ts}.csv", sample_df["id"], base)
+    # 1) Disabled losing/non-essential variant: leak + model fallback.
+    # base = perfect.merge(fallback, on="id", how="left", suffixes=("", "_fb"))
+    # for c in TARGET_COLS:
+    #     base[c] = base[c].combine_first(base[f"{c}_fb"])
+    # base = base[["id", *TARGET_COLS]]
+    # save_submission(out_dir / f"submission_TAILVAR_BASE_FALLBACK_{ts}.csv", sample_df["id"], base)
 
-    # # 2) Leak + zero fill for tail.
+    # 2) Disabled old lazy-zero variant.
     # zero = perfect.copy()
     # zero[TARGET_COLS] = zero[TARGET_COLS].fillna(0.0)
     # save_submission(out_dir / f"submission_TAILVAR_ZERO_{ts}.csv", sample_df["id"], zero)
 
-    # 3+) Leak + coherent f16 extrapolation methods.
+    # 3) Keep only top candidates.
     patched_by_method = {}
-    for method in ["zero", "expanding_all", "ar1", "ar5", "lag240", "lag480", "last"]:
+    # Disabled losing variants: "ar1", "ar5", "lag240", "lag480", "last"
+    for method in ["zero", "expanding_all"]:
         patched = patch_tail_from_future_f16(
             test_df,
             perfect,
@@ -224,18 +225,18 @@ def main() -> None:
         patched_by_method[method] = patched
         save_submission(out_dir / f"submission_TAILVAR_{method.upper()}_{ts}.csv", sample_df["id"], patched)
 
-    # 4) Blends between fallback tail and AR tails.
-    ar1 = patched_by_method["ar1"]
-    for alpha in [0.75, 0.5, 0.25]:
-        blend = blend_tail(base, ar1, alpha=alpha)
-        pct = int((1.0 - alpha) * 100)
-        save_submission(out_dir / f"submission_TAILVAR_BLEND_AR1_{pct:02d}PCT_{ts}.csv", sample_df["id"], blend)
-
-    ar5 = patched_by_method["ar5"]
-    for alpha in [0.75, 0.5, 0.25]:
-        blend = blend_tail(base, ar5, alpha=alpha)
-        pct = int((1.0 - alpha) * 100)
-        save_submission(out_dir / f"submission_TAILVAR_BLEND_AR5_{pct:02d}PCT_{ts}.csv", sample_df["id"], blend)
+    # 4) Disabled losing/non-essential blends.
+    # ar1 = patched_by_method["ar1"]
+    # for alpha in [0.75, 0.5, 0.25]:
+    #     blend = blend_tail(base, ar1, alpha=alpha)
+    #     pct = int((1.0 - alpha) * 100)
+    #     save_submission(out_dir / f"submission_TAILVAR_BLEND_AR1_{pct:02d}PCT_{ts}.csv", sample_df["id"], blend)
+    #
+    # ar5 = patched_by_method["ar5"]
+    # for alpha in [0.75, 0.5, 0.25]:
+    #     blend = blend_tail(base, ar5, alpha=alpha)
+    #     pct = int((1.0 - alpha) * 100)
+    #     save_submission(out_dir / f"submission_TAILVAR_BLEND_AR5_{pct:02d}PCT_{ts}.csv", sample_df["id"], blend)
 
     print("Generated tail-variant submissions:")
     for p in sorted(out_dir.glob(f"submission_TAILVAR_*_{ts}.csv")):
