@@ -284,7 +284,7 @@ def add_king_interactions(x_data: np.ndarray, king_idx: int, other_idxs: list[in
 def run_refinery(
     x_tr_scaled: np.ndarray, x_val_scaled: np.ndarray, x_test_scaled: np.ndarray, y_tr: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Clustering + scout feature selection + deltas/interactions (cell 4)."""
+    """Build refinery features via clustering, scout-selected top features, and interaction deltas."""
     print("⚖️ REFINERY: Starting Feature Engineering (Smart Mode)...")
     print("🚀 Generating Cluster Features (Honest Mode)...")
 
