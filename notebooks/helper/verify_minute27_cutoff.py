@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+"""Verify why minute-27 is used as the aligned boundary cutoff.
+
+The script inspects test size/phase and reports the cycle alignment that
+motivates minute-27 backtest boundaries.
+"""
+
 from pathlib import Path
 
 import pandas as pd
 
 
 def main() -> None:
+    """Load test index structure and print phase-alignment diagnostics."""
     root = Path(__file__).resolve().parents[1]
     test = pd.read_csv(root / "data" / "raw" / "test_v2.csv", usecols=["date_id", "minute_id"])
 

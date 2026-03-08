@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+"""Generate the leak-based submission with deterministic tail fallback.
+
+This script reconstructs targets directly from `feature_16` whenever future
+values are observable in test. Remaining NaNs at the tail are filled from a
+configured fallback submission (or with zeros if fallback is disabled).
+"""
+
 import argparse
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +18,7 @@ TARGET_COLS = ["target_short", "target_medium", "target_long"]
 
 
 def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
+    """Compute compounded return over `blocks` 10-minute steps."""
     out = pd.Series(1.0, index=feature_16.index, dtype="float64")
     for k in range(1, blocks + 1):
         out *= 1.0 + feature_16.shift(-10 * k)
@@ -18,6 +26,7 @@ def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
 
 
 def build_perfect_from_leak(test_df: pd.DataFrame) -> pd.DataFrame:
+    """Build deterministic predictions where leak coverage exists."""
     f16 = test_df["feature_16"]
     return pd.DataFrame(
         {
@@ -30,6 +39,7 @@ def build_perfect_from_leak(test_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def validate_on_train(train_df: pd.DataFrame) -> None:
+    """Print sanity metrics that verify the leak equations on train."""
     f16 = train_df["feature_16"]
     n = len(train_df)
 
@@ -58,6 +68,7 @@ def validate_on_train(train_df: pd.DataFrame) -> None:
 
 
 def load_submission(path: Path) -> pd.DataFrame:
+    """Load fallback submission and validate required schema."""
     sub = pd.read_csv(path)
     expected = {"id", *TARGET_COLS}
     if not expected.issubset(sub.columns):
@@ -66,21 +77,29 @@ def load_submission(path: Path) -> pd.DataFrame:
     return sub[["id", *TARGET_COLS]].copy()
 
 
-def main() -> None:
-    root = Path(__file__).resolve().parents[1]
-
+def parse_args(root: Path) -> argparse.Namespace:
+    """Parse command-line arguments for submission generation."""
     parser = argparse.ArgumentParser(description="Generate final leak submission for TradeMaster Cup 2025.")
     parser.add_argument("--test", type=Path, default=root / "data/raw/test_v2.csv")
     parser.add_argument("--train", type=Path, default=root / "data/raw/train_v2.csv")
     parser.add_argument("--sample", type=Path, default=root / "data/raw/sample_submission.csv")
     # Hardcoded fallback model
-    parser.add_argument("--fallback", type=Path, 
-                        default=root / "submissions" / "submission_Ensemble_Ref50_Rob50_CV0.67173_20260223_154015.csv", 
-                        help="Optional fallback submission for tail NaNs.")
+    parser.add_argument(
+        "--fallback",
+        type=Path,
+        default=root / "submissions" / "submission_Ensemble_Ref50_Rob50_CV0.67173_20260223_154015.csv",
+        help="Optional fallback submission for tail NaNs.",
+    )
     parser.add_argument("--output-dir", type=Path, default=root / "submissions")
     parser.add_argument("--output-name", type=str, default=None)
     parser.add_argument("--skip-train-check", action="store_true")
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def main() -> None:
+    """Entry point."""
+    root = Path(__file__).resolve().parents[1]
+    args = parse_args(root)
 
     test_df = pd.read_csv(args.test)
     sample_df = pd.read_csv(args.sample)
@@ -89,6 +108,7 @@ def main() -> None:
         raise ValueError(f"{args.test} must contain columns: id, feature_16")
 
     perfect = build_perfect_from_leak(test_df)
+    # Keep sample ID ordering exactly as required by Kaggle format.
     out = sample_df[["id"]].merge(perfect, on="id", how="left")
 
     if args.fallback is not None:

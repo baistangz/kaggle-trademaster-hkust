@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+"""Generate robust-anchor tail submission.
+
+Robust-anchor = weighted blend of:
+- macro specialist future (ridge next-day curve)
+- expanding minute-mean future
+"""
+
 import argparse
 from datetime import datetime
 from pathlib import Path
@@ -12,6 +19,7 @@ TARGET_COLS = ["target_short", "target_medium", "target_long"]
 
 
 def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
+    """Compute compounded return over `blocks` 10-minute steps."""
     out = pd.Series(1.0, index=feature_16.index, dtype="float64")
     for k in range(1, blocks + 1):
         out *= 1.0 + feature_16.shift(-10 * k)
@@ -19,6 +27,7 @@ def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
 
 
 def base_perfect(test_df: pd.DataFrame) -> pd.DataFrame:
+    """Build deterministic predictions where leak coverage exists."""
     f16 = test_df["feature_16"]
     return pd.DataFrame(
         {
@@ -31,12 +40,14 @@ def base_perfect(test_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def save_submission(path: Path, base_ids: pd.Series, pred: pd.DataFrame) -> None:
+    """Save predictions with required Kaggle schema/order."""
     out = pd.DataFrame({"id": base_ids})
     out = out.merge(pred[["id", *TARGET_COLS]], on="id", how="left")
     out.to_csv(path, index=False, float_format="%.18g")
 
 
 def day_features(curve: np.ndarray) -> np.ndarray:
+    """Extract compact day-level features for macro next-day regression."""
     o = float(curve[0])
     c = float(curve[-1])
     h = float(np.max(curve))
@@ -49,6 +60,7 @@ def day_features(curve: np.ndarray) -> np.ndarray:
 
 
 def build_train_day_curves(train_df: pd.DataFrame) -> dict[int, np.ndarray]:
+    """Collect finite full-day (240-row) feature_16 curves keyed by date_id."""
     curves: dict[int, np.ndarray] = {}
     dates = train_df["date_id"].to_numpy()
     f16 = train_df["feature_16"].to_numpy(dtype="float64")
@@ -64,6 +76,7 @@ def build_train_day_curves(train_df: pd.DataFrame) -> dict[int, np.ndarray]:
 
 
 def fit_macro_nextday_ridge(day_curves: dict[int, np.ndarray], ridge_lambda: float) -> np.ndarray:
+    """Fit ridge model mapping day features -> next-day 240-minute curve."""
     days = sorted(day_curves.keys())
     x_rows = []
     y_rows = []
@@ -86,6 +99,7 @@ def fit_macro_nextday_ridge(day_curves: dict[int, np.ndarray], ridge_lambda: flo
 
 
 def macro_future_from_test(test_df: pd.DataFrame, beta: np.ndarray, clip_abs: float) -> np.ndarray:
+    """Predict next 240-minute curve from the last complete test day."""
     last_date = int(test_df["date_id"].iloc[-1])
     curve = test_df.loc[test_df["date_id"] == last_date, "feature_16"].to_numpy(dtype="float64")
     if len(curve) < 240:
@@ -101,6 +115,7 @@ def macro_future_from_test(test_df: pd.DataFrame, beta: np.ndarray, clip_abs: fl
 
 
 def expanding_future_from_train(train_df: pd.DataFrame, test_df: pd.DataFrame) -> np.ndarray:
+    """Build 240-minute future using train minute-of-day means."""
     minute_mean = (
         train_df.groupby("minute_id")["feature_16"].mean().reindex(range(240)).fillna(0.0).to_numpy(dtype="float64")
     )
@@ -110,6 +125,7 @@ def expanding_future_from_train(train_df: pd.DataFrame, test_df: pd.DataFrame) -
 
 
 def patch_tail_from_future_f16(test_df: pd.DataFrame, perfect: pd.DataFrame, future: np.ndarray) -> pd.DataFrame:
+    """Fill unknown short/medium/long windows using provided future curve."""
     out = perfect.copy()
     f16 = test_df["feature_16"].to_numpy(dtype="float64")
     n = len(f16)
@@ -138,6 +154,7 @@ def patch_tail_from_future_f16(test_df: pd.DataFrame, perfect: pd.DataFrame, fut
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     p = argparse.ArgumentParser(description="Generate robust-anchor tailvar submission (macro+expanding blend).")
     p.add_argument("--macro-weight", type=float, default=0.75, help="Weight on macro future (0..1).")
     p.add_argument("--ridge-lambda", type=float, default=0.1, help="Ridge lambda for macro specialist.")
@@ -147,6 +164,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Entry point."""
     args = parse_args()
     if not (0.0 <= args.macro_weight <= 1.0):
         raise ValueError("--macro-weight must be between 0 and 1")

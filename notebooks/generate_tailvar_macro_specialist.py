@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+"""Generate macro-specialist tail submission.
+
+Macro specialist fits a ridge model that maps previous-day aggregate features
+to the next-day 240-minute `feature_16` curve, then patches unknown tail rows.
+"""
+
 import argparse
 from datetime import datetime
 from pathlib import Path
@@ -12,6 +18,7 @@ TARGET_COLS = ["target_short", "target_medium", "target_long"]
 
 
 def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
+    """Compute compounded return over `blocks` 10-minute steps."""
     out = pd.Series(1.0, index=feature_16.index, dtype="float64")
     for k in range(1, blocks + 1):
         out *= 1.0 + feature_16.shift(-10 * k)
@@ -19,6 +26,7 @@ def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
 
 
 def base_perfect(test_df: pd.DataFrame) -> pd.DataFrame:
+    """Build deterministic predictions where leak coverage exists."""
     f16 = test_df["feature_16"]
     return pd.DataFrame(
         {
@@ -31,12 +39,14 @@ def base_perfect(test_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def save_submission(path: Path, base_ids: pd.Series, pred: pd.DataFrame) -> None:
+    """Save predictions with required Kaggle schema/order."""
     out = pd.DataFrame({"id": base_ids})
     out = out.merge(pred[["id", *TARGET_COLS]], on="id", how="left")
     out.to_csv(path, index=False, float_format="%.18g")
 
 
 def day_features(curve: np.ndarray) -> np.ndarray:
+    """Extract compact day-level features for macro next-day regression."""
     o = float(curve[0])
     c = float(curve[-1])
     h = float(np.max(curve))
@@ -49,6 +59,7 @@ def day_features(curve: np.ndarray) -> np.ndarray:
 
 
 def build_train_day_curves(train_df: pd.DataFrame) -> dict[int, np.ndarray]:
+    """Collect finite full-day (240-row) feature_16 curves keyed by date_id."""
     curves: dict[int, np.ndarray] = {}
     for d in np.unique(train_df["date_id"].to_numpy()):
         idx = np.where(train_df["date_id"].to_numpy() == d)[0]
@@ -65,6 +76,7 @@ def fit_macro_nextday_ridge(
     day_curves: dict[int, np.ndarray],
     ridge_lambda: float,
 ) -> tuple[np.ndarray, int]:
+    """Fit ridge model mapping day features -> next-day 240-minute curve."""
     days = sorted(day_curves.keys())
 
     x_rows = []
@@ -93,6 +105,7 @@ def predict_future_f16_macro(
     beta: np.ndarray,
     clip_abs: float,
 ) -> np.ndarray:
+    """Predict next 240-minute curve from the last complete test day."""
     # Use the latest complete day in test as "yesterday".
     last_date = int(test_df["date_id"].iloc[-1])
     day_rows = test_df.loc[test_df["date_id"] == last_date, "feature_16"].to_numpy(dtype="float64")
@@ -115,6 +128,7 @@ def patch_tail_from_future_f16(
     perfect: pd.DataFrame,
     future: np.ndarray,
 ) -> pd.DataFrame:
+    """Fill unknown short/medium/long windows using provided future curve."""
     out = perfect.copy()
     f16 = test_df["feature_16"].to_numpy(dtype="float64")
     n = len(f16)
@@ -143,6 +157,7 @@ def patch_tail_from_future_f16(
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     p = argparse.ArgumentParser(description="Generate tailvar submission with macro next-day specialist.")
     p.add_argument("--ridge-lambda", type=float, default=1.0, help="L2 regularization for ridge fit.")
     p.add_argument("--clip-abs", type=float, default=0.1, help="Clamp predicted future f16 to +/-clip-abs.")
@@ -156,6 +171,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Entry point."""
     args = parse_args()
 
     root = Path(__file__).resolve().parents[1]

@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+"""Compare boundary-simulation CV at cutoff minute 27 vs 239.
+
+This helper ranks simple tail priors (zero/AR1/AR5) under both boundary
+definitions and prints side-by-side MAE statistics.
+"""
+
 from pathlib import Path
 
 import numpy as np
@@ -8,10 +14,12 @@ import pandas as pd
 
 
 def fut_zero(_: int, f16: np.ndarray) -> np.ndarray:
+    """Future prior: hard zeros."""
     return np.zeros(240, dtype="float64")
 
 
 def fut_ar1(e: int, f16: np.ndarray) -> np.ndarray:
+    """Future prior: clipped AR(1) recursion fitted on recent history."""
     hist = f16[: e + 1]
     hist = hist[np.isfinite(hist)]
     hist = hist[-4000:] if len(hist) > 4000 else hist
@@ -31,6 +39,7 @@ def fut_ar1(e: int, f16: np.ndarray) -> np.ndarray:
 
 
 def fut_ar5(e: int, f16: np.ndarray) -> np.ndarray:
+    """Future prior: clipped AR(5) recursion fitted by least squares."""
     hist = f16[: e + 1]
     hist = hist[np.isfinite(hist)]
     hist = hist[-6000:] if len(hist) > 6000 else hist
@@ -57,6 +66,7 @@ def fut_ar5(e: int, f16: np.ndarray) -> np.ndarray:
 
 
 def boundary_score_for_future(tr: pd.DataFrame, f16: np.ndarray, e: int, fut: np.ndarray) -> float:
+    """Compute competition-style weighted boundary MAE for one day endpoint."""
     err_short = []
     for i in range(e - 9, e + 1):
         err_short.append(abs(tr.at[i, "target_short"] - fut[i + 10 - e - 1]))
@@ -85,6 +95,7 @@ def boundary_score_for_future(tr: pd.DataFrame, f16: np.ndarray, e: int, fut: np
 def build_eval_indices(
     tr: pd.DataFrame, f16: np.ndarray, by_day: dict[int, np.ndarray], cutoff_minute: int
 ) -> list[int]:
+    """Build valid day endpoints for a given cutoff minute."""
     eval_idx: list[int] = []
     for d, idx in by_day.items():
         if len(idx) <= cutoff_minute:
@@ -107,6 +118,7 @@ def build_eval_indices(
 def run_cutoff(
     tr: pd.DataFrame, f16: np.ndarray, by_day: dict[int, np.ndarray], cutoff_minute: int
 ) -> tuple[int, dict[str, dict[str, float]]]:
+    """Evaluate all methods for a fixed cutoff minute."""
     methods = {
         "zero": fut_zero,
         "ar1": fut_ar1,
@@ -131,6 +143,7 @@ def run_cutoff(
 
 
 def main() -> None:
+    """Entry point for cutoff-27 vs cutoff-239 comparison."""
     root = Path(__file__).resolve().parents[1]
     tr = pd.read_csv(root / "data" / "raw" / "train_v2.csv")
     f16 = tr["feature_16"].to_numpy(dtype="float64")

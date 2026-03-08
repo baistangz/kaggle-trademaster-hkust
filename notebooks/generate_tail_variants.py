@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+"""Generate tail-variant submissions from the leak base.
+
+Important reproducibility note:
+- This script intentionally keeps only the currently selected candidate methods
+  active (`zero`, `expanding_all`).
+- Historical/losing variants are left commented for traceability.
+"""
+
 from datetime import datetime
 from pathlib import Path
 
@@ -8,9 +16,11 @@ import numpy as np
 import pandas as pd
 
 TARGET_COLS = ["target_short", "target_medium", "target_long"]
+ACTIVE_METHODS = ["zero", "expanding_all"]
 
 
 def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
+    """Compute compounded return over `blocks` 10-minute steps."""
     out = pd.Series(1.0, index=feature_16.index, dtype="float64")
     for k in range(1, blocks + 1):
         out *= 1.0 + feature_16.shift(-10 * k)
@@ -18,6 +28,7 @@ def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
 
 
 def base_perfect(test_df: pd.DataFrame) -> pd.DataFrame:
+    """Build deterministic predictions where leak coverage exists."""
     f16 = test_df["feature_16"]
     return pd.DataFrame(
         {
@@ -37,6 +48,7 @@ def extrapolate_future_f16(
     minute_id: np.ndarray | None = None,
     minute_mean_by_minute: np.ndarray | None = None,
 ) -> np.ndarray:
+    """Extrapolate 240-step future `feature_16` using a selected tail prior."""
     x = np.asarray(f16, dtype="float64")
     if method == "zero":
         return np.zeros(horizon, dtype="float64")
@@ -106,6 +118,7 @@ def patch_tail_from_future_f16(
     method: str,
     minute_mean_by_minute: np.ndarray | None = None,
 ) -> pd.DataFrame:
+    """Fill the unknown short/medium/long tail windows from extrapolated future."""
     out = perfect.copy()
     f16 = test_df["feature_16"].to_numpy(dtype="float64")
     minute_id = test_df["minute_id"].to_numpy(dtype="int64")
@@ -143,6 +156,7 @@ def patch_tail_from_future_f16(
 
 
 def load_submission(path: Path) -> pd.DataFrame:
+    """Load and validate a fallback submission."""
     sub = pd.read_csv(path)
     expected = {"id", *TARGET_COLS}
     if not expected.issubset(sub.columns):
@@ -152,6 +166,7 @@ def load_submission(path: Path) -> pd.DataFrame:
 
 
 def save_submission(path: Path, base_ids: pd.Series, pred: pd.DataFrame) -> None:
+    """Save predictions with required Kaggle schema/order."""
     out = pd.DataFrame({"id": base_ids})
     out = out.merge(pred[["id", *TARGET_COLS]], on="id", how="left")
     out.to_csv(path, index=False, float_format="%.18g")
@@ -180,6 +195,7 @@ def blend_tail(base: pd.DataFrame, alt: pd.DataFrame, alpha: float) -> pd.DataFr
 
 
 def main() -> None:
+    """Entry point."""
     root = Path(__file__).resolve().parents[1]
     test_path = root / "data/raw/test_v2.csv"
     train_path = root / "data/raw/train_v2.csv"
@@ -215,7 +231,7 @@ def main() -> None:
     # 3) Keep only top candidates.
     patched_by_method = {}
     # Disabled losing variants: "ar1", "ar5", "lag240", "lag480", "last"
-    for method in ["zero", "expanding_all"]:
+    for method in ACTIVE_METHODS:
         patched = patch_tail_from_future_f16(
             test_df,
             perfect,
