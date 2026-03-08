@@ -1,0 +1,19 @@
+=== Legacy Helper Output: compare_boundary_cv ===
+Comparing cutoff minute 27 vs 239 on train boundary simulation...
+
+cutoff=27 | eval_days=579
+  ZERO mean=0.00773736 median=0.00669703 std=0.00432937
+  AR1  mean=0.00727845 median=0.00617553 std=0.00421160
+  AR5  mean=0.00719046 median=0.00626656 std=0.00407919
+
+cutoff=239 | eval_days=578
+  ZERO mean=0.01441898 median=0.01135339 std=0.01046828
+  AR1  mean=0.01455810 median=0.01142253 std=0.01057422
+  AR5  mean=0.01456054 median=0.01154876 std=0.01051690
+
+Side-by-side mean MAE:
+cutoff         27        239  delta_239_minus_27
+method                                          
+ar5    0.00719046 0.01456054          0.00737008
+ar1    0.00727845 0.01455810          0.00727965
+zero   0.00773736 0.01441898          0.00668161

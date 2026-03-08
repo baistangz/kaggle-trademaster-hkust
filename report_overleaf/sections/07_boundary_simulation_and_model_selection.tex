@@ -1,0 +1,91 @@
+\section{Presentation of Experiments: Unknown-Tail Day Simulation and Local Model Ranking}
+
+To rank fallback models offline, I built a boundary simulator:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{report\_overleaf/proofs/proof\_05\_boundary\_simulation.py}
+\end{itemize}
+For completeness and historical traceability, I also include my original helper script used during the competition:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{notebooks/helper/compare\_boundary\_cv.py}
+\end{itemize}
+
+\subsection{Simulation idea}
+For each eligible historical day, I emulate the test condition by cutting at a boundary minute and forecasting the next 240-minute \texttt{feature\_16} horizon. Then I reconstruct short/medium/long targets from that horizon and compute weighted MAE:
+\begin{equation}
+\text{MAE}_{\text{weighted}} = 0.5\cdot\text{MAE}_{\text{short}} + 0.3\cdot\text{MAE}_{\text{medium}} + 0.2\cdot\text{MAE}_{\text{long}}.
+\end{equation}
+Here, cutoff 27 is the phase-aligned historical analogue of the observed test boundary, while cutoff 239 is the raw-minute endpoint of the final visible test day.
+
+\subsection{Basic benchmark (ZERO, AR1, AR5)}
+\begin{table}[h]
+\centering
+\caption{Boundary simulation results for basic methods}
+\begin{tabular}{lrrrr}
+\toprule
+Cutoff & Method & Eval Days & Mean MAE & Median MAE \\
+\midrule
+27  & ZERO & 579 & 0.00773736 & 0.00669703 \\
+27  & AR1  & 579 & 0.00727845 & 0.00617553 \\
+27  & AR5  & 579 & 0.00719046 & 0.00626656 \\
+239 & ZERO & 578 & 0.01441898 & 0.01135339 \\
+239 & AR1  & 578 & 0.01455810 & 0.01142253 \\
+239 & AR5  & 578 & 0.01456054 & 0.01154876 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Advanced fallback comparison at cutoff 239}
+In the advanced table, \texttt{global} means the future prior is fitted once using all historical training days, while \texttt{causal} means it is refit using only information available up to the simulated boundary day. Thus:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{expanding\_all\_global} uses the full-train minute mean curve,
+  \item \texttt{expanding\_all\_causal} uses only the historical prefix up to the simulated cutoff,
+  \item \texttt{macro\_lam0p1\_global} uses the macro ridge model with $\lambda=0.1$ fitted on all historical day transitions,
+  \item \texttt{macro\_lam0p1\_causal} uses the same macro model refit only on past day transitions available at that simulated time,
+  \item \texttt{robust\_anchor\_global} and \texttt{robust\_anchor\_causal} are the corresponding 75/25 blends of macro specialist and \texttt{expanding\_all}.
+\end{itemize}
+\begin{table}[h]
+\centering
+\caption{Advanced model ranking (cutoff 239)}
+\begin{tabular}{lrrr}
+\toprule
+Method & Eval Days & Mean MAE & Median MAE \\
+\midrule
+\texttt{macro\_lam0p1\_global}      & 578 & 0.01428740 & 0.01126519 \\
+\texttt{robust\_anchor\_global}     & 578 & 0.01429183 & 0.01125059 \\
+\texttt{expanding\_all\_global}     & 578 & 0.01432369 & 0.01117355 \\
+\texttt{robust\_anchor\_causal}     & 578 & 0.01433106 & 0.01113515 \\
+\texttt{macro\_lam0p1\_causal}      & 578 & 0.01433723 & 0.01108783 \\
+\texttt{expanding\_all\_causal}     & 578 & 0.01434218 & 0.01113030 \\
+\texttt{zero}                       & 578 & 0.01441898 & 0.01135339 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Statistical confidence (paired day-level comparisons)}
+To avoid over-reading tiny mean differences, I added paired day-level statistics (win rate and bootstrap CI for mean difference) from the same simulation days.
+\begin{table}[h]
+\centering
+\scriptsize
+\caption{Pairwise confidence summary at cutoff 239 (lower MAE is better)}
+\begin{tabular}{p{0.43\linewidth} c c p{0.24\linewidth}}
+\toprule
+Pair (A vs B) & Mean(A-B) & Win rate (A better) & 95\% CI for mean(A-B) \\
+\midrule
+\texttt{macro\_lam0p1\_global} vs \texttt{robust\_anchor\_global} & -0.00000443 & 50.52\% & [-0.00001863, 0.00001014] \\
+\texttt{macro\_lam0p1\_global} vs \texttt{expanding\_all\_global} & -0.00003628 & 51.04\% & [-0.00009324, 0.00002180] \\
+\texttt{robust\_anchor\_global} vs \texttt{expanding\_all\_global} & -0.00003186 & 51.73\% & [-0.00007478, 0.00001135] \\
+\texttt{zero} vs \texttt{expanding\_all\_global} & 0.00009529 & 44.29\% & [0.00002681, 0.00016806] \\
+\texttt{zero} vs \texttt{robust\_anchor\_global} & 0.00012715 & 44.98\% & [0.00004744, 0.00020784] \\
+\texttt{zero} vs \texttt{macro\_lam0p1\_global} & 0.00013157 & 45.67\% & [0.00004533, 0.00022138] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Interpretation:
+\begin{itemize}[leftmargin=1.5em]
+  \item Among top non-zero methods, CIs include zero; their ordering is statistically weak in this local proxy.
+  \item Against \texttt{zero}, all three top non-zero methods have positive CI-separated advantage in local simulation.
+\end{itemize}
+
+\subsection{Interpretation}
+Local simulation suggested macro/robust/expanding variants were slightly better than zero on average. However, the margin was very small, so private split regime differences could reverse ordering. This is exactly what happened on private leaderboard for one of the final comparisons.

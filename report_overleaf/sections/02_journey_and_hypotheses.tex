@@ -1,0 +1,60 @@
+\section{Creativity and Exploration: 200+ Submission Journey and Hypothesis Progression}
+
+I started with standard supervised learning assumptions and treated this as a normal financial tabular forecasting competition. The development path had three phases.
+
+\subsection{Phase 1: Pure ML Search}
+I built an XGBoost-centered pipeline, tested feature engineering, and tried alternatives (CatBoost, LightGBM, neural-network attempts, and blends). This improved my score relative to basic baselines, but performance eventually plateaued.
+
+\subsection{Phase 2: Structural Suspicion}
+As public leaderboard scores became unusually low for multiple teams, I shifted from hyperparameter tuning to target-mechanism analysis. The key question became:
+\begin{quote}
+Are targets generated from a deterministic transform of an observed test feature?
+\end{quote}
+
+\subsection{Phase 3: Decomposition Into ``Known'' vs ``Unknown'' Regions}
+After proving deterministic leakage, I reframed the task:
+\begin{itemize}[leftmargin=1.5em]
+  \item Most rows can be reconstructed exactly (no ML needed there).
+  \item Only the terminal tail requires true forecasting.
+\end{itemize}
+
+This decomposition explains why so many submissions were necessary: once scores are near zero and rounded on public LB, hidden decimals and tiny tail behavior differences dominate rank.
+
+\subsection{Submission timeline (phase transitions)}
+\begin{figure}[h]
+\centering
+\small
+\fbox{
+\begin{minipage}{0.94\linewidth}
+\textbf{Early stage:} baseline ML search (XGB, CatBoost, LightGBM, NN attempts).\\
+$\Downarrow$\\
+\textbf{Middle stage:} structural suspicion and leak equation testing (\texttt{feature\_16}, lag scan, formula proof).\\
+$\Downarrow$\\
+\textbf{Late stage:} tail-only modeling and final-slot strategy under hidden-decimal uncertainty.
+\end{minipage}
+}
+\caption{Milestone timeline across the 200+ submission process}
+\end{figure}
+
+\subsection{Experiment Log (Representative Milestones)}
+\begin{table}[h]
+\centering
+\small
+\caption{Representative milestones from the 200+ submission path}
+\begin{tabular}{p{0.12\linewidth} p{0.23\linewidth} p{0.30\linewidth} p{0.23\linewidth}}
+\toprule
+Phase & Hypothesis & Action & Outcome / Decision \\
+\midrule
+Early baseline & Strong tabular ML should beat naive fill & Trained pure XGBoost pipeline with feature engineering and chaining & Improved over host baseline; plateau near public-LB \texttt{0.773x--0.78x} \\
+NN attempts & NN + tree blend may outperform trees alone & Tested MLP/ResNet-style variants and blends & Stayed around \texttt{0.803x}, near all-zero sample baseline; deprioritized NN \\
+Suspicion stage & Scores near 0.0000 indicate structural weakness in assumptions & Switched from tuning to mechanism analysis & Identified deterministic leakage pattern candidates \\
+Leak proof & Targets are generated from future \texttt{feature\_16} transforms & Implemented shift/compound validation on train & Reconstruction error reduced to numerical precision \\
+Tail isolation & Only a small terminal region is unknown & Quantified non-NaN coverage on test & Confirmed unknown windows are exactly last 10/60/240 \\
+Tail modeling & Tail priors can decide hidden decimals & Evaluated zero/AR/expanding/macro/robust via boundary simulation & Margins were small; required robust final selection strategy \\
+Final evaluation & Best public 0.0000 may hide private decimal gaps & Chose final pair and analyzed post-release behavior & Hard-zero tail beat both selected non-zero tail priors on private (\texttt{0.0139} vs \texttt{0.0152}/\texttt{0.0153}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{My Contribution in This Exploration}
+The 200+ submissions were hypothesis-driven. For each stage, I documented what failed, updated assumptions, and narrowed the search space until the final decomposition (reconstruction + tail forecasting) was fully validated by both code and leaderboard behavior.

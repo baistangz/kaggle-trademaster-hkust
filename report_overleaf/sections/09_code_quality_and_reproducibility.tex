@@ -1,0 +1,132 @@
+\section{Code Quality: Reproducibility and Engineering Practices}
+
+\subsection{Pipeline modularization}
+I separated the solution into independent scripts:
+\begin{itemize}[leftmargin=1.5em]
+  \item Baseline pure-ML pipeline: \texttt{notebooks/solution.py}
+  \item Archival neural baseline: \texttt{notebooks/archival\_neural\_baseline.py}
+  \item Core zero-tail submission generator: \texttt{notebooks/generate\_zero\_submission.py}
+  \item Tail variant generator: \texttt{notebooks/generate\_tail\_variants.py}
+  \item Macro specialist: \texttt{notebooks/generate\_tailvar\_macro\_specialist.py}
+  \item Robust-anchor blend: \texttt{notebooks/generate\_tailvar\_robust\_anchor.py}
+  \item Sanity-check suite: \texttt{notebooks/helper/run\_sanity\_checks.py}
+\end{itemize}
+
+\subsection{Operational entry points and lightweight regression tests}
+To make the repository easier to inspect and rerun, I also added:
+\begin{itemize}[leftmargin=1.5em]
+  \item a root \texttt{Makefile} with one-command targets for sanity checks, proofs, diagnostics, and submission generation;
+  \item a \texttt{tests/} folder with lightweight regression tests for leak equations, cutoff alignment, unknown-tail sizes, and submission schema.
+\end{itemize}
+These additions do not change the competition logic, but they make the final codebase easier to inspect, test, and reproduce.
+
+\subsection{Environment and Dependencies}
+\begin{itemize}[leftmargin=1.5em]
+  \item Python: \texttt{3.13.0}
+  \item Dependency file: \texttt{requirements.txt}
+  \item Key packages: \texttt{numpy==2.4.1}, \texttt{pandas==2.3.3}, \texttt{scikit\_learn==1.8.0}, \texttt{xgboost==3.1.3}, \texttt{catboost==1.2.8}, \texttt{lightgbm==4.6.0}, \texttt{torch==2.9.1}.
+\end{itemize}
+
+\subsection{Repository Snapshot}
+\begin{itemize}[leftmargin=1.5em]
+  \item Repository: \texttt{https://github.com/baistangz/kaggle-trademaster-hkust.git}
+  \item Branch: \texttt{main}
+  \item Report/code snapshot commit: \texttt{18508301ce5a88464d22814301898acc6e6dbb13}
+\end{itemize}
+
+\subsection{Proof package (this report folder)}
+This report includes executable proof scripts under:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{report\_overleaf/proofs/}
+\end{itemize}
+
+Run all proofs with:
+\begin{Verbatim}[fontsize=\small]
+bash report_overleaf/proofs/run_all_proofs.sh
+\end{Verbatim}
+
+This generates:
+\begin{itemize}[leftmargin=1.5em]
+  \item text outputs in \texttt{report\_overleaf/results/}
+  \item CSV tables in \texttt{report\_overleaf/tables/}
+\end{itemize}
+
+\subsection{Claim-to-Proof Traceability}
+\begin{table}[htbp]
+\centering
+\scriptsize
+\caption{Mapping from core claims to executable proof artifacts}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}p{0.46\linewidth}p{0.22\linewidth}p{0.22\linewidth}}
+\toprule
+Claim & Script ID & Output ID \\
+\midrule
+Dataset structure and cutoff phase facts & \texttt{P01} & \texttt{O01} \\
+Deterministic leak formula and feature scan & \texttt{P02} & \texttt{O02} \\
+Unknown-tail window coverage on test & \texttt{P03} & \texttt{O03} \\
+Tail behavior comparison of submissions & \texttt{P04} & \texttt{O04} \\
+Boundary simulation model ranking & \texttt{P05} & \texttt{O05} \\
+Tail-window submission correlation & \texttt{P06} & \texttt{O06} \\
+Legacy cutoff verifier output & \texttt{P08} & \texttt{O08} \\
+Legacy boundary-CV helper output & \texttt{P09} & \texttt{O09} \\
+\bottomrule
+\end{tabular*}
+\end{table}
+\noindent\scriptsize
+\textbf{Script ID map:}
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{P01 = report\_overleaf/proofs/proof\_01\_dataset\_structure.py}
+  \item \texttt{P02 = report\_overleaf/proofs/proof\_02\_leak\_formula\_validation.py}
+  \item \texttt{P03 = report\_overleaf/proofs/proof\_03\_test\_coverage\_and\_unknown\_tail.py}
+  \item \texttt{P04 = report\_overleaf/proofs/proof\_04\_tail\_submission\_behavior.py}
+  \item \texttt{P05 = report\_overleaf/proofs/proof\_05\_boundary\_simulation.py}
+  \item \texttt{P06 = report\_overleaf/proofs/proof\_06\_submission\_correlation.py}
+  \item \texttt{P08 = report\_overleaf/proofs/proof\_08\_legacy\_verify\_minute27\_cutoff\_output.py}
+  \item \texttt{P09 = report\_overleaf/proofs/proof\_09\_legacy\_compare\_boundary\_cv\_output.py}
+\end{itemize}
+\textbf{Output ID map:}
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{O01 = proof\_01\_dataset\_structure.txt}
+  \item \texttt{O02 = proof\_02\_leak\_formula\_validation.txt}
+  \item \texttt{O03 = proof\_03\_test\_coverage\_and\_unknown\_tail.txt}
+  \item \texttt{O04 = proof\_04\_tail\_submission\_behavior.txt}
+  \item \texttt{O05 = proof\_05\_boundary\_simulation.txt + boundary\_*.csv}
+  \item \texttt{O06 = proof\_06\_submission\_correlation.txt}
+  \item \texttt{O08 = proof\_08\_legacy\_verify\_minute27\_cutoff\_output.txt}
+  \item \texttt{O09 = proof\_09\_legacy\_compare\_boundary\_cv\_output.txt}
+\end{itemize}
+\normalsize
+
+\subsection{End-to-End Reproduction Commands}
+\begin{Verbatim}[fontsize=\small]
+# Optional one-command entry points
+make sanity
+make tests
+make proofs
+
+# 0) Run sanity checks for formulas/coverage/schema
+python3 notebooks/helper/run_sanity_checks.py
+
+# 1) Regenerate all proof outputs for the report
+bash report_overleaf/proofs/run_all_proofs.sh
+
+# 2) Generate archival neural baseline
+python3 notebooks/archival_neural_baseline.py
+
+# 3) Generate zero submission (with configured fallback)
+python3 notebooks/generate_zero_submission.py --skip-train-check
+
+# 4) Generate tail variants
+python3 notebooks/generate_tail_variants.py
+
+# 5) Generate macro specialist candidate
+python3 notebooks/generate_tailvar_macro_specialist.py \
+  --ridge-lambda 0.1 \
+  --clip-abs 0.1
+
+# 6) Generate robust-anchor candidate
+python3 notebooks/generate_tailvar_robust_anchor.py \
+  --macro-weight 0.75 \
+  --ridge-lambda 0.1 \
+  --clip-abs 0.1
+\end{Verbatim}

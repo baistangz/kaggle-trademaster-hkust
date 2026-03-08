@@ -1,0 +1,72 @@
+\section{Data Analysis Skills: Structural Audit}
+
+I ran a dedicated audit script:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{report\_overleaf/proofs/proof\_01\_dataset\_structure.py}
+\end{itemize}
+I also include the original helper script used during the competition to verify cutoff-phase alignment:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{notebooks/helper/verify\_minute27\_cutoff.py}
+\end{itemize}
+
+\subsection{Dataset shape and schema}
+\begin{itemize}[leftmargin=1.5em]
+  \item Train: \texttt{(139392, 37)}
+  \item Test: \texttt{(34348, 34)}
+  \item Train has 3 target columns; test excludes targets.
+\end{itemize}
+
+\subsection{Time structure}
+\begin{itemize}[leftmargin=1.5em]
+  \item Minute range is \texttt{0..239}.
+  \item Test contains one partial opening day: \texttt{\{582: 28\}}.
+  \item First test row: \texttt{(date\_id=582, minute\_id=212)}.
+  \item Last test row: \texttt{(date\_id=725, minute\_id=239)}.
+\end{itemize}
+
+\subsection{Cutoff phase consistency}
+The test size is 34348 rows, and:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{34348 \% 240 = 28}
+  \item \texttt{(34348-1) \% 240 = 27}
+\end{itemize}
+This means:
+\begin{itemize}[leftmargin=1.5em]
+  \item the test set does not begin at minute 0 of a day;
+  \item the last observed test row is raw \texttt{minute\_id=239};
+  \item but relative to the hidden continuation, that row sits at cycle phase 27.
+\end{itemize}
+So there are two correct but different ways to describe the boundary:
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{raw-minute view:} the observed data ends at \texttt{minute\_id=239};
+  \item \textbf{phase-aligned view:} the equivalent historical cutoff for backtesting is minute 27.
+\end{itemize}
+This is why both minute-27 and minute-239 boundaries were checked in later simulations.
+
+\subsection{Missingness and numerical quality}
+The dataset contains NaNs in several features (and one Inf in \texttt{feature\_2}), but the key leakage variable and targets are numerically stable for formula validation windows:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{train\_feature\_16}: 10 NaNs, 0 Infs
+  \item \texttt{target\_short/medium/long}: 0 NaNs, 0 Infs
+\end{itemize}
+
+\subsection{Structural findings summary}
+\begin{table}[h]
+\centering
+\scriptsize
+\caption{Summary of structural findings used by the final solution}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}p{0.22\linewidth}p{0.22\linewidth}p{0.18\linewidth}p{0.28\linewidth}}
+\toprule
+Finding & How discovered & Proof script & Consequence for solution \\
+\midrule
+Test starts mid-day & First test row audit & \texttt{P01} & Raw \texttt{minute\_id} alone is not enough; phase alignment must be tracked. \\
+Final observed row is raw \texttt{minute\_id=239} & Last test row audit & \texttt{P01} & The hidden region is anchored at the end of the final day. \\
+Aligned cutoff phase is 27 & Test-length modulo-\texttt{240} check and helper verification & \texttt{P01}, \texttt{P08} & Historical simulations should use minute-27 as the phase-matched boundary. \\
+\texttt{target\_short} is \texttt{feature\_16.shift(-10)} & Lag sweep on train & \texttt{P02} & Short target can be reconstructed exactly whenever future \texttt{feature\_16} is visible. \\
+\texttt{target\_medium/long} are compounded future \texttt{feature\_16} & Formula validation on train & \texttt{P02} & Medium and long targets are also reconstructable except in terminal windows. \\
+Only last \texttt{10/60/240} rows are unknown & Test coverage audit & \texttt{P03} & Only the final-day tail requires fallback forecasting. \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+Proof output is included in Appendix~\ref{app:proof-outputs}.

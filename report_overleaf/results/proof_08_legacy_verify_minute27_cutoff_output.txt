@@ -1,0 +1,19 @@
+=== Legacy Helper Output: verify_minute27_cutoff ===
+=== Test Cutoff Verification ===
+rows: 34348
+first row: date=582, minute=212
+last row : date=725, minute=239
+rows % 240 = 28
+(rows-1) % 240 = 27
+
+Partial day structure:
+{582: 28}
+
+Phase alignment checks:
+minute from phase_last = (first_minute + phase_last) % 240 = 239
+minute from phase_next = (first_minute + phase_next) % 240 = 0
+
+Interpretation:
+- Raw test endpoint minute_id is 239.
+- Equivalent cycle phase at endpoint is 27.
+- Therefore minute-27 boundary simulation is the correct aligned cutoff for historical backtests.

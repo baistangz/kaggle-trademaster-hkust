@@ -1,0 +1,18 @@
+=== Tail Behavior Comparison ===
+A=submissions/submission_FINAL_LEAK_20260222_040009.csv
+B=submissions/tailvar/submission_TAILVAR_EXPANDING_ALL_20260224_030331.csv
+
+[target_short] last_10
+A: all_zero=True constant=True zeros=10 std=0 mean=0
+B: all_zero=False constant=False zeros=0 std=0.000299116533458 mean=-0.00114683991347
+A_vs_B: mae=0.00114683991347 equal_count=0/10
+
+[target_medium] last_60
+A: all_zero=True constant=True zeros=60 std=0 mean=0
+B: all_zero=False constant=False zeros=0 std=0.00132984508173 mean=-0.00256618771132
+A_vs_B: mae=0.00256618771132 equal_count=0/60
+
+[target_long] last_240
+A: all_zero=True constant=True zeros=240 std=0 mean=0
+B: all_zero=False constant=False zeros=0 std=0.00329393577414 mean=-0.00380510863096
+A_vs_B: mae=0.00424744551055 equal_count=0/240

@@ -1,0 +1,42 @@
+\section{Methods and Models: Initial Pure-ML Stage (XGBoost-Centric)}
+
+Before leak exploitation, I built a full machine-learning pipeline in:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{notebooks/solution.py}
+\end{itemize}
+
+Pipeline chronology (7 stages):
+\begin{enumerate}[leftmargin=1.5em]
+  \item Environment setup and deterministic seeds.
+  \item Data loading and split initialization.
+  \item ``Sniper'' feature pipeline (scaling + engineered features).
+  \item ``Refinery'' stage (additional feature transformations).
+  \item Champion chained XGBoost training (target-by-target dependency).
+  \item Alternative models (Purist/Robust variants).
+  \item Ensemble blend (Refinery + Robust).
+\end{enumerate}
+Here, ``Sniper'' denotes the main feature-engineering and scaling stage, ``Refinery'' adds cluster- and interaction-based features, ``Champion'' is the main chained XGBoost model, and ``Purist'' / ``Robust'' are alternative baseline variants used for comparison and ensemble diversity.
+
+\subsection{Why this stage still mattered}
+Even though the final solution depended more on leakage reconstruction, the pure-ML stage was important for:
+\begin{itemize}[leftmargin=1.5em]
+  \item establishing a strong baseline,
+  \item generating fallback candidates,
+  \item understanding which model families were stable on this dataset.
+\end{itemize}
+
+Practical result: tree-based methods outperformed my NN attempts; CatBoost/LightGBM variants were not competitive enough versus XGBoost in this setting.
+In later tables, I denote the regenerated archival NN baseline as \texttt{nn\_resnet\_honest} and the best single pure-ML XGBoost baseline as \texttt{xgb\_refinery}.
+
+\paragraph{NN performance observation.}
+I tested several NN variants (MLP/ResNet-style and NN-tree blends). After converting the archival notebook into \texttt{notebooks/archival\_neural\_baseline.py} and regenerating its submission, I observed that the output contained only four distinct 1e-6-rounded prediction triplets across all 34{,}348 test rows. Its leaderboard scores were also very close to the host \texttt{sample\_submission.csv} baseline: \texttt{sample\_submission.csv} scored \texttt{0.8031} public / \texttt{0.6121} private, while the archival NN baseline scored \texttt{0.8035} public / \texttt{0.6122} private. Based on these observations, my working hypothesis is that the tested NN variants converged to a near-constant, near-zero prediction pattern on this dataset, so I deprioritized them in later stages of the competition.
+
+\subsection{Proof artifact for baseline stage}
+To make this reproducible in the report package, I extracted the core baseline training blocks (champion, alternatives, ensemble) into:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{report\_overleaf/results/extracted\_baseline\_training\_blocks.py}
+\end{itemize}
+using script:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{report\_overleaf/proofs/proof\_07\_extract\_baseline\_training\_blocks.py}
+\end{itemize}

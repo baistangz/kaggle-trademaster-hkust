@@ -1,0 +1,71 @@
+\section{Methods and Models: Unknown Tail Isolation and Fallback Design}
+
+After leak reconstruction, only terminal rows remain unknown on test. I proved exact coverage using:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{report\_overleaf/proofs/proof\_03\_test\_coverage\_and\_unknown\_tail.py}
+\end{itemize}
+Combining the structural audit from Section~3 with the exact leak equations from Section~5 gives the final task decomposition used by the solution: most test targets can be reconstructed directly from future \texttt{feature\_16}, and only the terminal \texttt{10/60/240}-row windows require fallback forecasting.
+
+\subsection{End-to-end decomposition of the final solution}
+The full logic of the final pipeline can be summarized in four linked steps:
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{Locate the boundary correctly (Section~3).} The last visible test row has raw \texttt{minute\_id=239}, but because the test set starts mid-day, the phase-aligned historical cutoff is minute 27.
+  \item \textbf{Reconstruct what is already determined (Section~5).} All three targets are deterministic functions of future \texttt{feature\_16}, so wherever those future values are visible in test, the targets can be recovered exactly.
+  \item \textbf{Isolate the truly unknown region (this section).} After applying the leak equations, only the last \texttt{10/60/240} rows remain unknown for short/medium/long.
+  \item \textbf{Model only the remaining tail (Section~7).} Boundary simulation is then used to rank fallback priors for that final unknown region.
+\end{enumerate}
+So the competition is not solved by forecasting all \texttt{34{,}348} test rows directly. It decomposes into exact reconstruction on the known region plus a much smaller tail-forecasting problem on the final day.
+
+\subsection{Coverage on test (\texttt{n=34348})}
+\begin{itemize}[leftmargin=1.5em]
+  \item short: non-NaN 34338, NaN 10 (last 10 rows)
+  \item medium: non-NaN 34288, NaN 60 (last 60 rows)
+  \item long: non-NaN 34108, NaN 240 (last 240 rows)
+\end{itemize}
+
+Tail starts on the last date (\texttt{date\_id=725}) as expected:
+\begin{itemize}[leftmargin=1.5em]
+  \item long unknown region starts at minute 0 of final day
+  \item medium unknown region starts at minute 180
+  \item short unknown region starts at minute 230
+\end{itemize}
+
+\subsection{Fallback candidates}
+I evaluated multiple ways to fill the unknown future \texttt{feature\_16} horizon:
+\begin{itemize}[leftmargin=1.5em]
+  \item hard zero,
+  \item AR1 / AR5,
+  \item expanding minute mean,
+  \item macro specialist (ridge next-day curve),
+  \item robust-anchor blend (macro + expanding).
+\end{itemize}
+
+\subsection{Naming used later in simulation tables}
+To keep later tables short, I use the following model shorthand:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{zero}: hard-zero future for the unknown 240-minute horizon.
+  \item \texttt{expanding\_all}: minute-of-day mean future built from historical \texttt{feature\_16}.
+  \item \texttt{macro\_lam0p1}: macro-specialist ridge model with regularization $\lambda=0.1$.
+  \item \texttt{robust\_anchor}: 75/25 blend of macro-specialist future and \texttt{expanding\_all}.
+\end{itemize}
+
+Implementation scripts:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{notebooks/generate\_zero\_submission.py}
+  \item \texttt{notebooks/generate\_tail\_variants.py}
+  \item \texttt{notebooks/generate\_tailvar\_macro\_specialist.py}
+  \item \texttt{notebooks/generate\_tailvar\_robust\_anchor.py}
+\end{itemize}
+
+\subsection{Direct behavior comparison of two key models}
+I compared:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{zero}
+  \item \texttt{expanding\_all}
+\end{itemize}
+with script:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{report\_overleaf/proofs/proof\_04\_tail\_submission\_behavior.py}
+\end{itemize}
+
+Result: in unknown windows, \texttt{zero} is constant all-zero output; \texttt{expanding\_all} is dynamic non-zero output.

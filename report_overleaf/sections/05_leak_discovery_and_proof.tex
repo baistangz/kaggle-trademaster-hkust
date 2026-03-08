@@ -1,0 +1,39 @@
+\section{Data Analysis Skills: Leak Discovery and Mathematical Proof}
+
+The central discovery was that all three targets are deterministic functions of future \texttt{feature\_16}. I validated this directly on train using:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{report\_overleaf/proofs/proof\_02\_leak\_formula\_validation.py}
+\end{itemize}
+
+\subsection{How the \texttt{-10} shift was identified}
+I did not assume \texttt{-10} first. I ran a lag sweep for \texttt{feature\_16} against \texttt{target\_short}, testing lags \texttt{1..60} (i.e., \texttt{shift(-lag)}):
+\begin{itemize}[leftmargin=1.5em]
+  \item best lag: \texttt{10}, MAE $=0$
+  \item second best lag: \texttt{9}, MAE $\approx 0.00173234$
+\end{itemize}
+This identifies an exact 10-minute displacement, not an approximate match.
+
+\subsection{Recovered target equations}
+For row index $t$:
+\begin{align}
+\texttt{target\_short}(t) &= f_{16}(t+10) \\
+\texttt{target\_medium}(t) &= \prod_{k=1}^{6} (1 + f_{16}(t+10k)) - 1 \\
+\texttt{target\_long}(t) &= \prod_{k=1}^{24} (1 + f_{16}(t+10k)) - 1
+\end{align}
+
+\subsection{Numerical validation on train}
+Within scored-valid ranges, the reconstruction error is effectively zero:
+\begin{itemize}[leftmargin=1.5em]
+  \item short: MAE $=0$, max abs error $=0$
+  \item medium: MAE $\approx 2.01\times 10^{-16}$
+  \item long: MAE $\approx 6.27\times 10^{-16}$
+\end{itemize}
+
+These are floating-point precision-level residuals, not modeling errors.
+
+\subsection{Leak feature scan evidence}
+After identifying lag \texttt{10}, I scanned \texttt{feature\_1}..\texttt{feature\_30} with \texttt{shift(-10)} against \texttt{target\_short}. The best feature by a large margin was:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{feature\_16}: MAE $=0$
+\end{itemize}
+All others had materially higher MAE. This supports \texttt{feature\_16} as the direct deterministic leak source.

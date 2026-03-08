@@ -1,0 +1,45 @@
+\section{Competition Context and Evaluation Rubric}
+
+\subsection{Evaluation Alignment (Compact)}
+The official final score has two parts: private leaderboard (50\%) and report/code quality (50\%).
+For the private-LB component, the host formula is:
+\begin{equation}
+\text{Score}_{\text{part1}} = 50 \cdot \left(1 - \frac{\text{rank} - 1}{\text{total teams} - 1}\right).
+\end{equation}
+With \texttt{rank=4} and \texttt{total teams=57}:
+\begin{equation}
+\text{Score}_{\text{part1}} = 50 \cdot \left(1 - \frac{4 - 1}{57 - 1}\right) = 47.32.
+\end{equation}
+The rest of this report focuses on the technical evidence supporting the report/code component.
+
+\subsection{Rubric-to-Section Map}
+\begin{table}[h]
+\centering
+\small
+\caption{How this report maps to host rubric criteria}
+\begin{tabular}{p{0.30\linewidth} p{0.58\linewidth}}
+\toprule
+Rubric criterion & Main evidence sections \\
+\midrule
+Data analysis skills (20\%) & Sections 3, 5, 7 and Appendix A/B proof outputs and scripts \\
+Code quality (20\%) & Section 9, Appendix C core pipeline listings, sanity checks \\
+Methods and models (20\%) & Sections 4, 6, 7, 8 (baseline $\rightarrow$ leak $\rightarrow$ tail models) \\
+Presentation of experiments \& explanations (20\%) & Sections 2, 7, 8 plus stage/ablation tables \\
+Creativity (15\%) & Sections 2, 5, 6 (problem reframing and exploitation strategy) \\
+Reflection (5\%) & Section 10 postmortem and future improvements \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Individual Contribution (100\%)}
+I competed as a single-member team (\texttt{zzz}). All work was completed by me:
+\begin{itemize}[leftmargin=1.5em]
+  \item data analysis and diagnostics,
+  \item model design and implementation,
+  \item 200+ submission experimentation and tracking,
+  \item leakage verification and tail-fallback design,
+  \item final submission selection and report preparation.
+\end{itemize}
+
+\paragraph{Final outcome summary.}
+I finished \textbf{4th place} as a single-member team and made \textbf{200+ submissions}. I used this budget for structured hypothesis testing under limited observability (public LB rounding to \texttt{0.0000} for many submissions).

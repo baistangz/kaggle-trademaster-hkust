@@ -1,0 +1,29 @@
+=== Dataset Structure Proof ===
+train_shape=(139392, 37)
+test_shape=(34348, 34)
+train_columns=37
+test_columns=34
+
+=== Date/Minute Structure ===
+train_unique_date_id=581
+test_unique_date_id=144
+train_minute_range=[0, 239]
+test_minute_range=[0, 239]
+test_partial_days={582: 28}
+test_first_row=(date_id=582, minute_id=212)
+test_last_row=(date_id=725, minute_id=239)
+
+=== Cutoff Phase Alignment Check ===
+len_test=34348
+len_test_mod_240=28
+(len_test_minus_1)_mod_240=27
+minute_from_phase_last=239
+minute_from_phase_next=0
+
+=== NaN/Inf Audit ===
+train: nan_count=1547, inf_count=1
+test: nan_count=288, inf_count=0
+train_feature_16: nan=10, inf=0, min=-0.0918118466899, max=0.0957703265396
+train_target_short: nan=0, inf=0, min=-0.0918118466899, max=0.0957703265396
+train_target_medium: nan=0, inf=0, min=-0.0868044515103, max=0.0956399437412
+train_target_long: nan=0, inf=0, min=-0.131662269129, max=0.164725457571

@@ -1,0 +1,66 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{siunitx}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{enumitem}
+
+\hypersetup{colorlinks=true, linkcolor=blue!60!black, urlcolor=blue!60!black}
+
+\lstdefinestyle{py}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black},
+  commentstyle=\color{teal!60!black},
+  stringstyle=\color{orange!70!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  breaklines=true,
+  frame=single,
+  tabsize=2,
+  showstringspaces=false
+}
+
+\title{TradeMaster Cup 2025\\\large 4th Place Solution Report: Baseline ML $\rightarrow$ Leak Reconstruction $\rightarrow$ Tail Forecasting}
+\author{Team: \texttt{zzz} (single-member team)\\Author: \texttt{Baistan Zhyldyzbekov}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report documents my full competition path from an initial pure-ML approach to a structure-aware solution based on leakage reconstruction and tail-only forecasting. I submitted over 200 experiments and used that iteration budget to test hypotheses, not only hyperparameters. The final pipeline reconstructs targets deterministically where future \texttt{feature\_16} values are observable, then applies fallback strategies only on the terminal unknown windows (last 10/60/240 rows for short/medium/long). I provide code-level proof for every core claim: dataset structure, leakage equations, test coverage, unknown-tail localization, boundary simulation, and submission behavior comparison.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01_competition_and_rubric.tex}
+\input{sections/02_journey_and_hypotheses.tex}
+\input{sections/03_data_analysis.tex}
+\input{sections/04_baseline_ml_stage.tex}
+\input{sections/05_leak_discovery_and_proof.tex}
+\input{sections/06_unknown_tail_and_fallbacks.tex}
+\input{sections/07_boundary_simulation_and_model_selection.tex}
+\input{sections/08_final_submissions_and_private_postmortem.tex}
+\input{sections/09_code_quality_and_reproducibility.tex}
+\input{sections/10_reflection.tex}
+
+\appendix
+\input{sections/A_proof_outputs.tex}
+\input{sections/B_proof_code_listings.tex}
+\input{sections/C_core_pipeline_code_listings.tex}
+
+\end{document}

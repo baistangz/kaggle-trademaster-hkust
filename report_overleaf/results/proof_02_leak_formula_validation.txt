@@ -1,0 +1,31 @@
+=== Leak Formula Validation on Train ===
+short:  valid_rows=139382, mae=0, max_abs_err=0
+medium: valid_rows=139332, mae=2.00659368962e-16, max_abs_err=9.86623976962e-16
+long:   valid_rows=139152, mae=6.27007869896e-16, max_abs_err=2.51187959321e-15
+
+=== Lag Sweep for feature_16 -> target_short ===
+best_lag=10, mae=0, valid_rows=139382, gap_to_second_best=0.00173234233895 (second lag=9)
+top_10_lags_by_mae:
+  lag=10 mae=0 valid_rows=139382
+  lag= 9 mae=0.00173234233895 valid_rows=139382
+  lag=11 mae=0.00173235476202 valid_rows=139381
+  lag= 8 mae=0.00245289240738 valid_rows=139382
+  lag=12 mae=0.00245292496304 valid_rows=139380
+  lag= 7 mae=0.00299827258633 valid_rows=139382
+  lag=13 mae=0.00299830561785 valid_rows=139379
+  lag= 6 mae=0.00346448411363 valid_rows=139382
+  lag=14 mae=0.00346451255458 valid_rows=139378
+  lag= 5 mae=0.00387723958816 valid_rows=139382
+
+=== Candidate Single-Feature Leak Scan for target_short ===
+top_10_by_mae_shift_minus_10:
+  feature_16 mae=0 valid_rows=139382
+  feature_28 mae=0.00357687424318 valid_rows=139382
+  feature_22 mae=0.00361371302788 valid_rows=139382
+  feature_20 mae=0.00375602574504 valid_rows=139382
+  feature_29 mae=0.00396370135435 valid_rows=139362
+  feature_14 mae=0.00407461696292 valid_rows=139362
+  feature_23 mae=0.00408023628813 valid_rows=139382
+  feature_13 mae=0.00473121165743 valid_rows=139363
+  feature_2  mae=0.00497031089355 valid_rows=139382
+  feature_30 mae=0.00545804980541 valid_rows=139362

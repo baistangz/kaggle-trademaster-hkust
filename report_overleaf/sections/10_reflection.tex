@@ -1,0 +1,43 @@
+\section{Reflection and Future Work}
+
+\subsection{What worked}
+\begin{itemize}[leftmargin=1.5em]
+  \item Reframing the problem from full ML prediction to deterministic reconstruction + tail forecasting.
+  \item Using large submission budget for explicit hypothesis testing, not random tuning.
+  \item Keeping multiple tail priors active to hedge hidden-decimal and split-regime risk.
+\end{itemize}
+
+\subsection{What failed or underperformed}
+\begin{itemize}[leftmargin=1.5em]
+  \item NN attempts were unstable on this dataset.
+  \item Some local-CV winners did not transfer to private-LB winners.
+  \item Public LB rounding at \texttt{0.0000} made model selection harder and increased decision uncertainty.
+\end{itemize}
+
+\subsection{Why the final slot selection failed}
+The main selection mistake was not that local simulation was useless, but that I treated a tiny mean-MAE advantage as more trustworthy than it really was under hidden-decimal uncertainty. In my cutoff-239 proxy, the non-zero tail priors (\texttt{expanding\_all}, \texttt{robust\_anchor}, macro variants) looked slightly better than \texttt{zero}, but the margins were extremely small and the top non-zero methods were highly correlated. In hindsight, this meant I was choosing between models whose local ordering was fragile, while also leaving out the most structurally different candidate. A stronger final-slot policy would have explicitly balanced two objectives:
+\begin{itemize}[leftmargin=1.5em]
+  \item best local proxy score,
+  \item strongest structural diversification under public-LB rounding.
+\end{itemize}
+Under that decision rule, \texttt{zero} deserved more weight because it represented a qualitatively different tail assumption rather than only a slightly worse local score.
+
+\subsection{What I would improve next time}
+\begin{itemize}[leftmargin=1.5em]
+  \item Build an automated experiment registry from day 1 (config, seed, score, rationale).
+  \item Add stronger stress tests for regime shifts in the hidden tail segment.
+  \item Quantify submission diversity earlier using tail-window correlation diagnostics.
+  \item Align local model-selection criteria more directly with decision risk under public-LB rounding, instead of optimizing only the smallest proxy MAE.
+\end{itemize}
+
+\subsection{General lesson about evaluation design}
+The broader lesson is that evaluation design can change what ``best model'' means. When a leaderboard is rounded and the remaining uncertainty is concentrated in a tiny hidden region, average validation error is no longer the only relevant quantity. Robust model selection must also account for:
+\begin{itemize}[leftmargin=1.5em]
+  \item whether candidate submissions are meaningfully different from each other,
+  \item whether the hidden split could be governed by a different local regime,
+  \item whether the public metric hides the true ranking behind rounding.
+\end{itemize}
+In other words, once scores are compressed near zero, selecting two final submissions becomes a risk-management problem as much as a pure optimization problem.
+
+\paragraph{Personal takeaway.}
+This competition was my first deep experience of how far careful data understanding can outperform brute-force model tuning. The 200+ submission path reflects a complete engineering cycle: baseline building, failure diagnosis, structural discovery, targeted experimentation, and postmortem verification.

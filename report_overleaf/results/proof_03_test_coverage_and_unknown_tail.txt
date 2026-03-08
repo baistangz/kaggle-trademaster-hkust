@@ -1,0 +1,8 @@
+=== Leak Coverage on Test ===
+test_rows=34348
+target_short: non_na=34338, na=10, expected_tail=10
+  na_index_range=[34338, 34347] first=(date_id=725, minute_id=230) last=(date_id=725, minute_id=239)
+target_medium: non_na=34288, na=60, expected_tail=60
+  na_index_range=[34288, 34347] first=(date_id=725, minute_id=180) last=(date_id=725, minute_id=239)
+target_long: non_na=34108, na=240, expected_tail=240
+  na_index_range=[34108, 34347] first=(date_id=725, minute_id=0) last=(date_id=725, minute_id=239)

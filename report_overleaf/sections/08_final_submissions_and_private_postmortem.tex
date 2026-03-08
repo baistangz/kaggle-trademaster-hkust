@@ -1,0 +1,117 @@
+\section{Presentation of Experiments: Final Submissions and Private-LB Postmortem}
+
+\subsection{Known private-LB outcomes}
+After private results release, the following private-LB outcomes were available and used for postmortem:
+\begin{table}[h]
+\centering
+\caption{Private-LB comparison}
+\begin{tabular}{lcc}
+\toprule
+Submission (short name) & Public LB & Private LB \\
+\midrule
+\texttt{zero} & 0.0000 & 0.0139 \\
+\texttt{expanding\_all} & 0.0000 & 0.0152 \\
+\texttt{robust\_anchor} & 0.0000 & 0.0153 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Although all were rounded to \texttt{0.0000} on public LB, private decimals separated them.
+
+\subsection{Consolidated Scoreboard}
+\begin{table}[htbp]
+\centering
+\scriptsize
+\caption{Scoreboard across key stages (representative models)}
+\begin{tabular}{p{0.28\linewidth} c c p{0.36\linewidth}}
+\toprule
+Submission (short name) & Public LB & Private LB & Notes / evidence source \\
+\midrule
+\texttt{sample\_submission} & 0.8031 & 0.6121 & Host-provided all-zero baseline \\
+\texttt{nn\_resnet\_honest} & 0.8035 & 0.6122 & Archival NN baseline; regenerated output collapsed to four near-zero templates \\
+\texttt{xgb\_refinery} & 0.7733 & 0.6288 & Best single XGB in pure-ML stage; overfit to public split relative to private \\
+\texttt{zero} & 0.0000 & 0.0139 & Leak reconstruction + hard-zero tail behavior; not selected for final evaluation \\
+\texttt{expanding\_all} & 0.0000 & 0.0152 & Tail fallback with expanding minute mean; selected for final evaluation \\
+\texttt{robust\_anchor} & 0.0000 & 0.0153 & Tail fallback blend (macro + expanding anchor); selected for final evaluation \\
+\bottomrule
+\end{tabular}
+\end{table}
+\noindent\scriptsize
+\textit{Note: Timestamps and \texttt{.csv} suffixes from original submission filenames were removed to keep model names short.}
+\textit{Also, \texttt{sample\_submission} is the host baseline file, while \texttt{nn\_resnet\_honest} refers to the regenerated archival NN baseline produced by \texttt{notebooks/archival\_neural\_baseline.py}. Here, \texttt{zero} denotes the leak-reconstruction submission whose unknown tail windows were filled with hard zeros.}
+\normalsize
+
+\subsection{Ablation view across stages (with score deltas)}
+\begin{table}[htbp]
+\centering
+\scriptsize
+\caption{Stage-wise ablation with public/private deltas (lower is better)}
+\begin{tabular}{p{0.26\linewidth} c c c c p{0.20\linewidth}}
+\toprule
+Stage model (short name) & Public & Private & $\Delta$Public vs prev & $\Delta$Private vs prev & Key decision \\
+\midrule
+\texttt{sample\_submission} & 0.8031 & 0.6121 & -- & -- & Baseline reference \\
+\texttt{nn\_resnet\_honest} & 0.8035 & 0.6122 & +0.0004 & +0.0001 & NN deprioritized after near-zero collapse \\
+\texttt{xgb\_refinery} & 0.7733 & 0.6288 & -0.0302 & +0.0166 & Strong public, weak private transfer \\
+\texttt{zero} & 0.0000 & 0.0139 & -0.7733 & -0.6149 & Structural leap via leakage reconstruction \\
+\texttt{expanding\_all} & 0.0000 & 0.0152 & +0.0000 & +0.0013 & Selected final-eval slot \\
+\texttt{robust\_anchor} & 0.0000 & 0.0153 & +0.0000 & +0.0001 & Selected final-eval slot \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Final-Evaluation Slot Decision}
+At selection time (before private release), I used my two final-evaluation slots on \texttt{expanding\_all} and \texttt{robust\_anchor}. \texttt{zero} and the macro-specialist candidate with $\lambda=0.1$ were \textbf{not} selected for final evaluation. After private release, the postmortem showed that hard-zero tail behavior (as in \texttt{zero}) generalized better than both selected tail priors (\texttt{expanding\_all}, \texttt{robust\_anchor}) on the checked hidden split.
+
+\subsection{Final Selection Rationale}
+\begin{table}[htbp]
+\centering
+\scriptsize
+\caption{Why final models were selected (and what I learned afterward)}
+\begin{tabular}{p{0.26\linewidth} p{0.19\linewidth} p{0.15\linewidth} p{0.30\linewidth}}
+\toprule
+Candidate & Local tail proxy (cutoff-239 weighted boundary MAE) & Private LB (known) & Selection / interpretation \\
+\midrule
+\texttt{expanding\_all} & Better than \texttt{zero} in local proxy ($\sim$0.01432) & 0.0152 & Selected for final evaluation due to strong local simulation performance \\
+\texttt{robust\_anchor} & Competitive local proxy ($\sim$0.01429--0.01434 family) & 0.0153 & Selected for final evaluation as robust-diversity candidate \\
+\texttt{zero} & \texttt{zero} baseline around 0.01442 at cutoff-239 proxy & 0.0139 & Not selected for final evaluation; post-release comparator that outperformed both selected models \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Why local-CV ranking reversed on private LB}
+Local cutoff-239 simulation favored non-zero tail priors over \texttt{zero} by small but CI-supported margins (e.g., \texttt{zero} $-$ \texttt{macro\_lam0p1\_global} mean diff $\approx +1.3157\times10^{-4}$, 95\% CI $[4.533\times10^{-5}, 2.2138\times10^{-4}]$). However, private outcomes reversed this ordering:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{zero} (hard-zero tail behavior): \texttt{0.0139}
+  \item \texttt{expanding\_all}: \texttt{0.0152}
+  \item \texttt{robust\_anchor}: \texttt{0.0153}
+\end{itemize}
+This indicates hidden-tail regime shift: the private tail day behaved closer to zero-centered continuation than to the historical average patterns that helped in local simulation.
+
+\subsection{Why \texttt{zero} beat selected tail models in private}
+Using \texttt{report\_overleaf/proofs/proof\_04\_tail\_submission\_behavior.py}, I verified:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{zero} uses hard-zero in all unknown windows.
+  \item \texttt{expanding\_all} injects dynamic non-zero minute-mean values.
+  \item \texttt{robust\_anchor} private score (\texttt{0.0153}) was also worse than \texttt{zero} (\texttt{0.0139}).
+\end{itemize}
+
+Therefore, on this private hidden split, the unknown tail behaved closer to zero-centered dynamics than the selected non-zero tail priors.
+
+\subsection{Model diversity check}
+I also computed pairwise correlation/MAE in unknown windows with:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{report\_overleaf/proofs/proof\_06\_submission\_correlation.py}
+\end{itemize}
+This showed \texttt{robust\_anchor} and macro-family variants were highly correlated in tail windows, while zero-style fallback was structurally different in short-tail behavior.
+
+\subsection{Main lesson from postmortem}
+Near-zero public scores can hide meaningful private differences. In this competition, tiny assumptions on the final unknown 240-minute horizon were enough to change rank.
+
+\subsection{Threats to Validity}
+\begin{itemize}[leftmargin=1.5em]
+  \item Public leaderboard rounding to \texttt{0.0000} hides meaningful decimal-level differences.
+  \item Local boundary simulation is a proxy, not an exact private-LB emulator.
+  \item Distribution shift in the hidden tail day can reverse local-CV ranking.
+  \item Highly correlated submission pairs reduce effective diversification.
+\end{itemize}
