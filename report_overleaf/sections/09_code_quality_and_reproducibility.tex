@@ -12,7 +12,7 @@ I separated the solution into independent scripts:
   \item Sanity-check suite: \texttt{notebooks/helper/run\_sanity\_checks.py}
   \item Shared reusable logic: \texttt{trademaster\_core/}
 \end{itemize}
-This shared core removed duplicated leak math, tail-patching logic, and path-handling code from the main submission generators.
+The \texttt{trademaster\_core/} module stores shared utilities for deterministic target reconstruction, tail-future generation, submission IO, and path resolution, so the main scripts can remain thin command-line entrypoints.
 
 \subsection{Operational entry points and lightweight regression tests}
 To make the repository easier to inspect and rerun, I also added:
