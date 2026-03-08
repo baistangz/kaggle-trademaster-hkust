@@ -147,7 +147,7 @@ def main() -> None:
         train_df = pd.read_csv(args.train)
         validate_on_train(train_df)
 
-    print("\nLeak overwrite coverage on test:")
+    print("\nDeterministic overwrite coverage on test:")
     print(f"  target_short  non-NaN from leak: {perfect['target_short'].notna().sum()} / {len(perfect)}")
     print(f"  target_medium non-NaN from leak: {perfect['target_medium'].notna().sum()} / {len(perfect)}")
     print(f"  target_long   non-NaN from leak: {perfect['target_long'].notna().sum()} / {len(perfect)}")
