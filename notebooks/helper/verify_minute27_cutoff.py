@@ -8,13 +8,20 @@ motivates minute-27 backtest boundaries.
 """
 
 from pathlib import Path
+import sys
 
 import pandas as pd
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from trademaster_core.paths import find_repo_root
 
 
 def main() -> None:
     """Load test index structure and print phase-alignment diagnostics."""
-    root = Path(__file__).resolve().parents[2]
+    root = find_repo_root(Path(__file__))
     test = pd.read_csv(root / "data" / "raw" / "test_v2.csv", usecols=["date_id", "minute_id"])
 
     n = len(test)

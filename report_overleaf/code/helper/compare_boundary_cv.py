@@ -8,9 +8,16 @@ definitions and prints side-by-side MAE statistics.
 """
 
 from pathlib import Path
+import sys
 
 import numpy as np
 import pandas as pd
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from trademaster_core.paths import find_repo_root
 
 
 def fut_zero(_: int, f16: np.ndarray) -> np.ndarray:
@@ -144,7 +151,7 @@ def run_cutoff(
 
 def main() -> None:
     """Entry point for cutoff-27 vs cutoff-239 comparison."""
-    root = Path(__file__).resolve().parents[2]
+    root = find_repo_root(Path(__file__))
     tr = pd.read_csv(root / "data" / "raw" / "train_v2.csv")
     f16 = tr["feature_16"].to_numpy(dtype="float64")
     date = tr["date_id"].to_numpy()

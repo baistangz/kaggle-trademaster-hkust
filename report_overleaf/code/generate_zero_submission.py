@@ -12,34 +12,23 @@ Submission naming convention for manual output names in docs/comments:
 """
 
 import argparse
+import sys
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 
-TARGET_COLS = ["target_short", "target_medium", "target_long"]
-SUBMISSION_NAMING_CONVENTION = "submission_<PIPELINE>_<VARIANT>_CV<LOCAL_CV>.csv"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-
-def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
-    """Compute compounded return over `blocks` 10-minute steps."""
-    out = pd.Series(1.0, index=feature_16.index, dtype="float64")
-    for k in range(1, blocks + 1):
-        out *= 1.0 + feature_16.shift(-10 * k)
-    return out - 1.0
-
-
-def build_known_region_predictions(test_df: pd.DataFrame) -> pd.DataFrame:
-    """Build deterministic predictions where future coverage exists."""
-    f16 = test_df["feature_16"]
-    return pd.DataFrame(
-        {
-            "id": test_df["id"],
-            "target_short": f16.shift(-10),              # leak reconstruction via global shift
-            "target_medium": compounded_target(f16, 6),  # (1+r_10)...(1+r_60)-1
-            "target_long": compounded_target(f16, 24),   # (1+r_10)...(1+r_240)-1
-        }
-    )
+from trademaster_core.constants import SUBMISSION_NAMING_CONVENTION, TARGET_COLS
+from trademaster_core.leak_math import (
+    build_known_region_predictions,
+    compounded_target,
+    known_region_counts,
+)
+from trademaster_core.submission_io import apply_fallback, load_submission, schema_aligned_submission
 
 
 def validate_on_train(train_df: pd.DataFrame) -> None:
@@ -70,17 +59,6 @@ def validate_on_train(train_df: pd.DataFrame) -> None:
     print(f"  short rows lost by by-day shift(-10) in scored range: {missing_in_scored}")
     print(f"  short MAE if those rows are zero-filled: {byday_zero_mae:.12g}")
 
-
-def load_submission(path: Path) -> pd.DataFrame:
-    """Load fallback submission and validate required schema."""
-    sub = pd.read_csv(path)
-    expected = {"id", *TARGET_COLS}
-    if not expected.issubset(sub.columns):
-        missing = sorted(expected - set(sub.columns))
-        raise ValueError(f"{path} is missing required columns: {missing}")
-    return sub[["id", *TARGET_COLS]].copy()
-
-
 def parse_args(root: Path) -> argparse.Namespace:
     """Parse command-line arguments for submission generation."""
     parser = argparse.ArgumentParser(description="Generate zero submission for TradeMaster Cup 2025.")
@@ -109,7 +87,7 @@ def parse_args(root: Path) -> argparse.Namespace:
 
 def main() -> None:
     """Entry point."""
-    root = Path(__file__).resolve().parents[1]
+    root = REPO_ROOT
     args = parse_args(root)
 
     test_df = pd.read_csv(args.test)
@@ -120,18 +98,14 @@ def main() -> None:
 
     perfect = build_known_region_predictions(test_df)
     # Keep sample ID ordering exactly as required by Kaggle format.
-    out = sample_df[["id"]].merge(perfect, on="id", how="left")
+    out = schema_aligned_submission(sample_df["id"], perfect)
 
     if args.fallback is not None:
         fallback = load_submission(args.fallback)
-        out = out.merge(fallback, on="id", how="left", suffixes=("", "_fb"))
-        for c in TARGET_COLS:
-            out[c] = out[c].combine_first(out[f"{c}_fb"])
-            out.drop(columns=[f"{c}_fb"], inplace=True)
+        out, fallback_label = apply_fallback(out, fallback)
         fallback_label = str(args.fallback)
     else:
-        out[TARGET_COLS] = out[TARGET_COLS].fillna(0.0)
-        fallback_label = "0.0 fill"
+        out, fallback_label = apply_fallback(out, None)
 
     if args.output_name:
         output_name = args.output_name
@@ -147,10 +121,11 @@ def main() -> None:
         train_df = pd.read_csv(args.train)
         validate_on_train(train_df)
 
-    print("\nLeak overwrite coverage on test:")
-    print(f"  target_short  non-NaN from leak: {perfect['target_short'].notna().sum()} / {len(perfect)}")
-    print(f"  target_medium non-NaN from leak: {perfect['target_medium'].notna().sum()} / {len(perfect)}")
-    print(f"  target_long   non-NaN from leak: {perfect['target_long'].notna().sum()} / {len(perfect)}")
+    counts = known_region_counts(perfect)
+    print("\nDeterministic overwrite coverage on test:")
+    print(f"  target_short  non-NaN from leak: {counts['target_short']} / {len(perfect)}")
+    print(f"  target_medium non-NaN from leak: {counts['target_medium']} / {len(perfect)}")
+    print(f"  target_long   non-NaN from leak: {counts['target_long']} / {len(perfect)}")
     print(f"  Tail fallback source: {fallback_label}")
     print(f"  Naming convention (docs/examples): {SUBMISSION_NAMING_CONVENTION}")
     print(f"\nSaved: {output_path}")

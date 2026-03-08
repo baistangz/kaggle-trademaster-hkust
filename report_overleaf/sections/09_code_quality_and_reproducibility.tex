@@ -10,13 +10,16 @@ I separated the solution into independent scripts:
   \item Macro specialist: \texttt{notebooks/generate\_tailvar\_macro\_specialist.py}
   \item Robust-anchor blend: \texttt{notebooks/generate\_tailvar\_robust\_anchor.py}
   \item Sanity-check suite: \texttt{notebooks/helper/run\_sanity\_checks.py}
+  \item Shared reusable logic: \texttt{trademaster\_core/}
 \end{itemize}
+This shared core removed duplicated leak math, tail-patching logic, and path-handling code from the main submission generators.
 
 \subsection{Operational entry points and lightweight regression tests}
 To make the repository easier to inspect and rerun, I also added:
 \begin{itemize}[leftmargin=1.5em]
   \item a root \texttt{Makefile} with one-command targets for sanity checks, proofs, diagnostics, and submission generation;
-  \item a \texttt{tests/} folder with lightweight regression tests for leak equations, cutoff alignment, unknown-tail sizes, and submission schema.
+  \item a \texttt{tests/} folder with regression tests for leak equations, cutoff alignment, unknown-tail sizes, submission schema, zero-submission generation, tail-model finiteness, and helper-script smoke runs;
+  \item a report-code sync script (\texttt{scripts/sync\_report\_code.py}) that copies source files into \texttt{report\_overleaf/code/}, so appendix mirrors are synchronized rather than maintained manually.
 \end{itemize}
 These additions do not change the competition logic, but they make the final codebase easier to inspect, test, and reproduce.
 
@@ -103,6 +106,7 @@ Legacy boundary-CV helper output & \texttt{P09} & \texttt{O09} \\
 make sanity
 make tests
 make proofs
+make sync-report-code
 
 # 0) Run sanity checks for formulas/coverage/schema
 python3 notebooks/helper/run_sanity_checks.py

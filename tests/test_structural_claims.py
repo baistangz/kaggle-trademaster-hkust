@@ -7,18 +7,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
-def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
-    out = pd.Series(1.0, index=feature_16.index, dtype="float64")
-    for k in range(1, blocks + 1):
-        out *= 1.0 + feature_16.shift(-10 * k)
-    return out - 1.0
+from trademaster_core.leak_math import build_known_region_predictions, compounded_target
+from trademaster_core.paths import find_repo_root
 
 
 class StructuralClaimsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        root = Path(__file__).resolve().parents[1]
+        root = find_repo_root(Path(__file__))
         cls.train_df = pd.read_csv(root / "data" / "raw" / "train_v2.csv")
         cls.test_df = pd.read_csv(root / "data" / "raw" / "test_v2.csv")
         cls.sample_df = pd.read_csv(root / "data" / "raw" / "sample_submission.csv")
@@ -61,16 +57,8 @@ class StructuralClaimsTest(unittest.TestCase):
         self.assertEqual((int(last_row["date_id"]), int(last_row["minute_id"])), (725, 239))
 
     def test_submission_schema_matches_sample(self) -> None:
-        test_df = self.test_df
         sample_df = self.sample_df
-        pred = pd.DataFrame(
-            {
-                "id": test_df["id"],
-                "target_short": test_df["feature_16"].shift(-10),
-                "target_medium": compounded_target(test_df["feature_16"], 6),
-                "target_long": compounded_target(test_df["feature_16"], 24),
-            }
-        )
+        pred = build_known_region_predictions(self.test_df)
         out = sample_df[["id"]].merge(pred, on="id", how="left")
         self.assertEqual(list(out.columns), ["id", "target_short", "target_medium", "target_long"])
         self.assertTrue(out["id"].equals(sample_df["id"]))

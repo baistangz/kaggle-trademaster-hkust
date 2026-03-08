@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: help sanity tests proofs boundary zero tailvars macro robust baseline nn all-checks
+.PHONY: help sanity tests proofs boundary zero tailvars macro robust baseline nn sync-report-code all-checks
 
 help:
 	@echo "Available targets:"
@@ -14,6 +14,7 @@ help:
 	@echo "  robust     Generate the robust-anchor tail submission"
 	@echo "  baseline   Run the pure-ML baseline pipeline"
 	@echo "  nn         Run the archival neural baseline"
+	@echo "  sync-report-code Synchronize repo code into report_overleaf/code"
 	@echo "  all-checks Run sanity checks, tests, and proof generation"
 
 sanity:
@@ -46,5 +47,8 @@ baseline:
 
 nn:
 	$(PYTHON) notebooks/archival_neural_baseline.py
+
+sync-report-code:
+	$(PYTHON) scripts/sync_report_code.py
 
 all-checks: sanity tests proofs
