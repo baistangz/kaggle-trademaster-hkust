@@ -6,6 +6,9 @@ from __future__ import annotations
 This script reconstructs targets directly from `feature_16` whenever future
 values are observable in test. Remaining NaNs at the tail are filled from a
 configured fallback submission (or with zeros if fallback is disabled).
+
+Submission naming convention for manual output names in docs/comments:
+`submission_<PIPELINE>_<VARIANT>_CV<LOCAL_CV>.csv`
 """
 
 import argparse
@@ -15,6 +18,7 @@ from pathlib import Path
 import pandas as pd
 
 TARGET_COLS = ["target_short", "target_medium", "target_long"]
+SUBMISSION_NAMING_CONVENTION = "submission_<PIPELINE>_<VARIANT>_CV<LOCAL_CV>.csv"
 
 
 def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
@@ -91,7 +95,15 @@ def parse_args(root: Path) -> argparse.Namespace:
         help="Optional fallback submission for tail NaNs.",
     )
     parser.add_argument("--output-dir", type=Path, default=root / "submissions")
-    parser.add_argument("--output-name", type=str, default=None)
+    parser.add_argument(
+        "--output-name",
+        type=str,
+        default=None,
+        help=(
+            "Optional output filename. Recommended format: "
+            "submission_FINAL_LEAK_<VARIANT>_CV<LOCAL_CV>.csv"
+        ),
+    )
     parser.add_argument("--skip-train-check", action="store_true")
     return parser.parse_args()
 
@@ -141,6 +153,7 @@ def main() -> None:
     print(f"  target_medium non-NaN from leak: {perfect['target_medium'].notna().sum()} / {len(perfect)}")
     print(f"  target_long   non-NaN from leak: {perfect['target_long'].notna().sum()} / {len(perfect)}")
     print(f"  Tail fallback source: {fallback_label}")
+    print(f"  Naming convention (docs/examples): {SUBMISSION_NAMING_CONVENTION}")
     print(f"\nSaved: {output_path}")
 
 

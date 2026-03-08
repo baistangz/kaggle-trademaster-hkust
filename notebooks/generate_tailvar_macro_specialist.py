@@ -5,6 +5,9 @@ from __future__ import annotations
 
 Macro specialist fits a ridge model that maps previous-day aggregate features
 to the next-day 240-minute `feature_16` curve, then patches unknown tail rows.
+
+Submission naming convention for manual output names in docs/comments:
+`submission_<PIPELINE>_<VARIANT>_CV<LOCAL_CV>.csv`
 """
 
 import argparse
@@ -15,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 TARGET_COLS = ["target_short", "target_medium", "target_long"]
+SUBMISSION_NAMING_CONVENTION = "submission_<PIPELINE>_<VARIANT>_CV<LOCAL_CV>.csv"
 
 
 def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
@@ -165,7 +169,11 @@ def parse_args() -> argparse.Namespace:
         "--output-name",
         type=str,
         default="",
-        help="Optional output filename. If omitted, script auto-generates one in submissions/.",
+        help=(
+            "Optional output filename. Recommended format: "
+            "submission_TAILVAR_MACRO_SPECIALIST_LAM<val>_CV<LOCAL_CV>.csv. "
+            "If omitted, script auto-generates one in submissions/."
+        ),
     )
     return p.parse_args()
 
@@ -204,6 +212,7 @@ def main() -> None:
     print(f"Train day transitions used: {n_transitions}")
     print(f"Ridge lambda: {args.ridge_lambda}")
     print(f"Clip abs: {args.clip_abs}")
+    print(f"Naming convention (docs/examples): {SUBMISSION_NAMING_CONVENTION}")
 
 
 if __name__ == "__main__":

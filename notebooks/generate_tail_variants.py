@@ -6,6 +6,9 @@ from __future__ import annotations
 This script intentionally generates only the currently active variants:
 - `zero`
 - `expanding_all`
+
+Submission naming convention for manual output names in docs/comments:
+`submission_<PIPELINE>_<VARIANT>_CV<LOCAL_CV>.csv`
 """
 
 from datetime import datetime
@@ -16,6 +19,7 @@ import pandas as pd
 
 TARGET_COLS = ["target_short", "target_medium", "target_long"]
 ACTIVE_METHODS = ("zero", "expanding_all")
+SUBMISSION_NAMING_CONVENTION = "submission_<PIPELINE>_<VARIANT>_CV<LOCAL_CV>.csv"
 
 
 def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
@@ -150,6 +154,7 @@ def main() -> None:
     print("Generated tail-variant submissions:")
     for p in generated:
         print(p)
+    print(f"Naming convention (docs/examples): {SUBMISSION_NAMING_CONVENTION}")
 
 
 if __name__ == "__main__":

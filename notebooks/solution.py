@@ -4,6 +4,9 @@ from __future__ import annotations
 """Baseline ML pipeline in script form (7-stage workflow).
 
 Script-first version of the baseline model development flow.
+
+Submission naming convention for manual output names in docs/comments:
+`submission_<PIPELINE>_<VARIANT>_CV<LOCAL_CV>.csv`
 """
 
 import glob
@@ -22,6 +25,7 @@ from sklearn.preprocessing import RobustScaler
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SUBMISSION_NAMING_CONVENTION = "submission_<PIPELINE>_<VARIANT>_CV<LOCAL_CV>.csv"
 
 
 class CONFIG:
@@ -396,6 +400,7 @@ def train_champion_refinery(
     sub = center_submission_targets(sub)
 
     avg_cv = weighted_cv_to_display(cv_scores)
+    # Keep timestamp for run uniqueness; docs/examples use SUBMISSION_NAMING_CONVENTION.
     filename = f"submission_XGB_Refinery_CV{avg_cv:.5f}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     output_path = submissions_dir / filename
     sub.to_csv(output_path, index=False)
@@ -441,6 +446,7 @@ def train_purist(
     sub = center_submission_targets(sub)
 
     avg_cv = weighted_cv_to_display(cv_scores)
+    # Keep timestamp for run uniqueness; docs/examples use SUBMISSION_NAMING_CONVENTION.
     filename = f"submission_XGB_Purist_CV{avg_cv:.5f}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     output_path = submissions_dir / filename
     sub.to_csv(output_path, index=False)
@@ -489,6 +495,7 @@ def train_robust(
     sub = center_submission_targets(sub)
 
     avg_cv = weighted_cv_to_display(cv_scores)
+    # Keep timestamp for run uniqueness; docs/examples use SUBMISSION_NAMING_CONVENTION.
     filename = f"submission_XGB_Robust_CV{avg_cv:.5f}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     output_path = submissions_dir / filename
     sub.to_csv(output_path, index=False)
@@ -525,6 +532,7 @@ def blend_refinery_and_robust(
     cv_rob_val = cv_rob if cv_rob is not None else 0.67037
     ens_cv = cv_ref_val * w_ref + cv_rob_val * w_rob
 
+    # Keep timestamp for run uniqueness; docs/examples use SUBMISSION_NAMING_CONVENTION.
     filename = f"submission_Ensemble_Ref50_Rob50_CV{ens_cv:.5f}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     output_path = submissions_dir / filename
     sub_ens.to_csv(output_path, index=False)
@@ -537,6 +545,7 @@ def blend_refinery_and_robust(
 def main() -> None:
     """Run the full converted baseline pipeline."""
     print("# --- Stage 1: Global Setup and Determinism ---")
+    print(f"📎 Naming convention (docs/examples): {SUBMISSION_NAMING_CONVENTION}")
     seed_everything(CONFIG.SEED)
     _device = detect_device()
     print(f"🔧 Global Configuration Loaded. Data Path: {CONFIG.DATA_PATH}")

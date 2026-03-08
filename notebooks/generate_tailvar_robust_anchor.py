@@ -6,6 +6,9 @@ from __future__ import annotations
 Robust-anchor = weighted blend of:
 - macro specialist future (ridge next-day curve)
 - expanding minute-mean future
+
+Submission naming convention for manual output names in docs/comments:
+`submission_<PIPELINE>_<VARIANT>_CV<LOCAL_CV>.csv`
 """
 
 import argparse
@@ -16,6 +19,7 @@ import numpy as np
 import pandas as pd
 
 TARGET_COLS = ["target_short", "target_medium", "target_long"]
+SUBMISSION_NAMING_CONVENTION = "submission_<PIPELINE>_<VARIANT>_CV<LOCAL_CV>.csv"
 
 
 def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
@@ -159,7 +163,15 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--macro-weight", type=float, default=0.75, help="Weight on macro future (0..1).")
     p.add_argument("--ridge-lambda", type=float, default=0.1, help="Ridge lambda for macro specialist.")
     p.add_argument("--clip-abs", type=float, default=0.1, help="Clamp macro future to +/- clip_abs.")
-    p.add_argument("--output-name", type=str, default="", help="Optional output filename.")
+    p.add_argument(
+        "--output-name",
+        type=str,
+        default="",
+        help=(
+            "Optional output filename. Recommended format: "
+            "submission_TAILVAR_ROBUST_ANCHOR_W<val>_LAM<val>_CV<LOCAL_CV>.csv"
+        ),
+    )
     return p.parse_args()
 
 
@@ -210,6 +222,7 @@ def main() -> None:
     print(f"ridge_lambda={args.ridge_lambda}")
     print(f"clip_abs={args.clip_abs}")
     print(f"future_range=[{future.min():.8f}, {future.max():.8f}]")
+    print(f"Naming convention (docs/examples): {SUBMISSION_NAMING_CONVENTION}")
 
 
 if __name__ == "__main__":
