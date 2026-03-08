@@ -4,6 +4,7 @@ This repository contains the final reproducible scripts used in competition.
 
 ## Repository Layout
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/solution.py`: baseline pure-ML XGBoost pipeline (feature engineering + ensemble).
+- `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/archival_neural_baseline.py`: archival ResNet-style NN baseline used during early exploration.
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/final_leak_submission.py`: leak reconstruction with fallback fill for tail rows.
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tail_variants.py`: deterministic tail priors (`zero`, `expanding_all`).
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tailvar_macro_specialist.py`: macro ridge tail model.
@@ -51,19 +52,25 @@ python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/helper/run_s
 python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/solution.py
 ```
 
-### 2) Leak + Fallback Submission
+### 2) Archival Neural Baseline
+```bash
+python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/archival_neural_baseline.py \
+  --output-name submission_RESNET_HONEST.csv
+```
+
+### 3) Leak + Fallback Submission
 ```bash
 python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/final_leak_submission.py \
   --fallback /Users/baistan/Developer/kaggle-trademaster-hkust/submissions/submission_Ensemble_Ref50_Rob50_CV0.67173.csv \
   --output-name submission_FINAL_LEAK_FIXED_CV0.00005.csv
 ```
 
-### 3) Tail Variants (zero, expanding_all)
+### 4) Tail Variants (zero, expanding_all)
 ```bash
 python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tail_variants.py
 ```
 
-### 4) Macro Specialist Tail
+### 5) Macro Specialist Tail
 ```bash
 python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tailvar_macro_specialist.py \
   --ridge-lambda 0.1 \
@@ -71,7 +78,7 @@ python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tai
   --output-name submission_TAILVAR_MACRO_SPECIALIST_LAM0p1_CV0.00708.csv
 ```
 
-### 5) Robust Anchor Tail
+### 6) Robust Anchor Tail
 ```bash
 python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tailvar_robust_anchor.py \
   --macro-weight 0.75 \
@@ -80,7 +87,7 @@ python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tai
   --output-name submission_TAILVAR_ROBUST_ANCHOR_W0p75_LAM0p1_CV0.00705.csv
 ```
 
-### 6) Boundary Diagnostics
+### 7) Boundary Diagnostics
 ```bash
 python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/helper/verify_minute27_cutoff.py
 python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/helper/compare_boundary_cv.py
