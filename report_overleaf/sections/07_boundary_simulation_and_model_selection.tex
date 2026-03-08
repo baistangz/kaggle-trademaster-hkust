@@ -15,6 +15,7 @@ For each eligible historical day, I emulate the test condition by cutting at a b
 \text{MAE}_{\text{weighted}} = 0.5\cdot\text{MAE}_{\text{short}} + 0.3\cdot\text{MAE}_{\text{medium}} + 0.2\cdot\text{MAE}_{\text{long}}.
 \end{equation}
 Here, cutoff 27 is the phase-aligned historical analogue of the observed test boundary, while cutoff 239 is the raw-minute endpoint of the final visible test day.
+The day-count column in the following tables refers to valid historical backtest days that survive the boundary-simulation filters, not to the total number of calendar or trading days in the competition.
 
 \subsection{Basic benchmark (ZERO, AR1, AR5)}
 \begin{table}[h]
@@ -22,7 +23,7 @@ Here, cutoff 27 is the phase-aligned historical analogue of the observed test bo
 \caption{Boundary simulation results for basic methods}
 \begin{tabular}{lrrrr}
 \toprule
-Cutoff & Method & Eval Days & Mean MAE & Median MAE \\
+Cutoff & Method & Valid Backtest Days & Mean MAE & Median MAE \\
 \midrule
 27  & ZERO & 579 & 0.00773736 & 0.00669703 \\
 27  & AR1  & 579 & 0.00727845 & 0.00617553 \\
@@ -48,7 +49,7 @@ In the advanced table, \texttt{global} means the future prior is fitted once usi
 \caption{Advanced model ranking (cutoff 239)}
 \begin{tabular}{lrrr}
 \toprule
-Method & Eval Days & Mean MAE & Median MAE \\
+Method & Valid Backtest Days & Mean MAE & Median MAE \\
 \midrule
 \texttt{macro\_lam0p1\_global}      & 578 & 0.01428740 & 0.01126519 \\
 \texttt{robust\_anchor\_global}     & 578 & 0.01429183 & 0.01125059 \\

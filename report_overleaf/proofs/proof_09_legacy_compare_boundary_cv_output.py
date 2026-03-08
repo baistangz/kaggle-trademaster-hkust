@@ -144,7 +144,7 @@ def main() -> None:
     print("Comparing cutoff minute 27 vs 239 on train boundary simulation...")
     for cutoff in [27, 239]:
         n_days, result = run_cutoff(tr, f16, by_day, cutoff)
-        print(f"\ncutoff={cutoff} | eval_days={n_days}")
+        print(f"\ncutoff={cutoff} | valid_backtest_days={n_days}")
         for method, stats in result.items():
             print(
                 f"  {method.upper():<4} mean={stats['mean_mae']:.8f} "
@@ -154,7 +154,7 @@ def main() -> None:
                 {
                     "cutoff": cutoff,
                     "method": method,
-                    "eval_days": n_days,
+                    "valid_backtest_days": n_days,
                     "mean_mae": stats["mean_mae"],
                     "median_mae": stats["median_mae"],
                     "std_mae": stats["std_mae"],

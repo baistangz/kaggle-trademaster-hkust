@@ -352,11 +352,13 @@ def main() -> None:
 
     print("=== Boundary Simulation: Basic (ZERO/AR1/AR5) ===")
     basic = score_methods_basic(env)
-    print(basic.to_string(index=False, float_format=lambda x: f"{x:.8f}"))
+    basic_print = basic.rename(columns={"eval_days": "valid_backtest_days"})
+    print(basic_print.to_string(index=False, float_format=lambda x: f"{x:.8f}"))
 
     print("\n=== Boundary Simulation: Advanced (Cutoff 239) ===")
     adv, score_map = score_methods_advanced_cutoff239(env)
-    print(adv.sort_values("mean_mae").to_string(index=False, float_format=lambda x: f"{x:.8f}"))
+    adv_print = adv.sort_values("mean_mae").rename(columns={"eval_days": "valid_backtest_days"})
+    print(adv_print.to_string(index=False, float_format=lambda x: f"{x:.8f}"))
 
     pairs = [
         ("macro_lam0p1_global", "robust_anchor_global"),
@@ -394,8 +396,8 @@ def main() -> None:
 
     out_dir = Path(__file__).resolve().parents[1] / "tables"
     out_dir.mkdir(parents=True, exist_ok=True)
-    basic.to_csv(out_dir / "boundary_basic.csv", index=False)
-    adv.sort_values("mean_mae").to_csv(out_dir / "boundary_advanced_cutoff239.csv", index=False)
+    basic_print.to_csv(out_dir / "boundary_basic.csv", index=False)
+    adv_print.to_csv(out_dir / "boundary_advanced_cutoff239.csv", index=False)
     pw.to_csv(out_dir / "boundary_pairwise_confidence_cutoff239.csv", index=False)
 
 

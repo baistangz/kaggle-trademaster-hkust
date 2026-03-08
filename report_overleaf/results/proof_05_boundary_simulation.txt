@@ -1,21 +1,21 @@
 === Boundary Simulation: Basic (ZERO/AR1/AR5) ===
-scenario  cutoff method  eval_days   mean_mae  median_mae    std_mae
-   basic      27   zero        579 0.00773736  0.00669703 0.00432937
-   basic      27    ar1        579 0.00727845  0.00617553 0.00421160
-   basic      27    ar5        579 0.00719046  0.00626656 0.00407919
-   basic     239   zero        578 0.01441898  0.01135339 0.01046828
-   basic     239    ar1        578 0.01455810  0.01142253 0.01057422
-   basic     239    ar5        578 0.01456054  0.01154876 0.01051690
+scenario  cutoff method  valid_backtest_days   mean_mae  median_mae    std_mae
+   basic      27   zero                  579 0.00773736  0.00669703 0.00432937
+   basic      27    ar1                  579 0.00727845  0.00617553 0.00421160
+   basic      27    ar5                  579 0.00719046  0.00626656 0.00407919
+   basic     239   zero                  578 0.01441898  0.01135339 0.01046828
+   basic     239    ar1                  578 0.01455810  0.01142253 0.01057422
+   basic     239    ar5                  578 0.01456054  0.01154876 0.01051690
 
 === Boundary Simulation: Advanced (Cutoff 239) ===
-          scenario  cutoff               method  eval_days   mean_mae  median_mae    std_mae
-advanced_cutoff239     239  macro_lam0p1_global        578 0.01428740  0.01126519 0.01046549
-advanced_cutoff239     239 robust_anchor_global        578 0.01429183  0.01125059 0.01047960
-advanced_cutoff239     239 expanding_all_global        578 0.01432369  0.01117355 0.01052774
-advanced_cutoff239     239 robust_anchor_causal        578 0.01433106  0.01113515 0.01063695
-advanced_cutoff239     239  macro_lam0p1_causal        578 0.01433723  0.01108783 0.01063432
-advanced_cutoff239     239 expanding_all_causal        578 0.01434218  0.01113030 0.01064936
-advanced_cutoff239     239                 zero        578 0.01441898  0.01135339 0.01046828
+          scenario  cutoff               method  valid_backtest_days   mean_mae  median_mae    std_mae
+advanced_cutoff239     239  macro_lam0p1_global                  578 0.01428740  0.01126519 0.01046549
+advanced_cutoff239     239 robust_anchor_global                  578 0.01429183  0.01125059 0.01047960
+advanced_cutoff239     239 expanding_all_global                  578 0.01432369  0.01117355 0.01052774
+advanced_cutoff239     239 robust_anchor_causal                  578 0.01433106  0.01113515 0.01063695
+advanced_cutoff239     239  macro_lam0p1_causal                  578 0.01433723  0.01108783 0.01063432
+advanced_cutoff239     239 expanding_all_causal                  578 0.01434218  0.01113030 0.01064936
+advanced_cutoff239     239                 zero                  578 0.01441898  0.01135339 0.01046828
 
 === Pairwise Confidence (Cutoff 239, day-level paired) ===
        a        b   n      mean_d       med_d      win_a       ci_lo      ci_hi
