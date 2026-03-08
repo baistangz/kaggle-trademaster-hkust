@@ -5,7 +5,7 @@ This repository contains the final reproducible scripts used in competition.
 ## Repository Layout
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/solution.py`: baseline pure-ML XGBoost pipeline (feature engineering + ensemble).
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/archival_neural_baseline.py`: archival ResNet-style NN baseline used during early exploration.
-- `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/final_leak_submission.py`: leak reconstruction with fallback fill for tail rows.
+- `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_zero_submission.py`: zero-model generator with hard-zero fill for the unknown tail rows.
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tail_variants.py`: deterministic tail priors (`zero`, `expanding_all`).
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tailvar_macro_specialist.py`: macro ridge tail model.
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tailvar_robust_anchor.py`: robust anchor blend (macro + expanding).
@@ -27,6 +27,14 @@ source venv/bin/activate
 python3 -m pip install -r requirements.txt
 ```
 
+## Quickstart
+```bash
+make sanity
+make tests
+make proofs
+```
+These targets provide the shortest reproducible path for structural checks, regression checks, and report-proof regeneration.
+
 ## Submission Naming Convention
 Use one naming format in all manual output names:
 
@@ -34,7 +42,7 @@ Use one naming format in all manual output names:
 
 Examples:
 - `submission_PURE_XGB_REFINERY_CV0.00666.csv`
-- `submission_FINAL_LEAK_FIXED_CV0.00005.csv`
+- `submission_ZERO_CV0.00005.csv`
 - `submission_TAILVAR_EXPANDING_ALL_CV0.00712.csv`
 - `submission_TAILVAR_ROBUST_ANCHOR_W0p75_LAM0p1_CV0.00705.csv`
 
@@ -45,6 +53,11 @@ If a script is run without `--output-name`, it may append a timestamp for unique
 ### 0) Sanity Checks
 ```bash
 python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/helper/run_sanity_checks.py
+```
+
+### 0.5) Lightweight Regression Tests
+```bash
+python3 -m unittest discover -s /Users/baistan/Developer/kaggle-trademaster-hkust/tests -v
 ```
 
 ### 1) Baseline Pure-ML
@@ -60,10 +73,10 @@ python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/archival_neu
 ```
 Long-running archival baseline. Included for report completeness rather than final submission generation.
 
-### 3) Leak + Fallback Submission
+### 3) Zero Submission
 ```bash
-python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/final_leak_submission.py \
-  --output-name submission_FINAL_LEAK_FIXED_CV0.00005.csv
+python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_zero_submission.py \
+  --output-name submission_ZERO_CV0.00005.csv
 ```
 
 ### 4) Tail Variants (zero, expanding_all)

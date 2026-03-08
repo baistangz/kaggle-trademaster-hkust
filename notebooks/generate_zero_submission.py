@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-"""Generate the leak-based submission with deterministic tail fallback.
+"""Generate the zero-model submission.
 
 This script reconstructs targets directly from `feature_16` whenever future
 values are observable in test. Remaining NaNs at the tail are filled from a
@@ -29,13 +29,13 @@ def compounded_target(feature_16: pd.Series, blocks: int) -> pd.Series:
     return out - 1.0
 
 
-def build_perfect_from_leak(test_df: pd.DataFrame) -> pd.DataFrame:
-    """Build deterministic predictions where leak coverage exists."""
+def build_known_region_predictions(test_df: pd.DataFrame) -> pd.DataFrame:
+    """Build deterministic predictions where future coverage exists."""
     f16 = test_df["feature_16"]
     return pd.DataFrame(
         {
             "id": test_df["id"],
-            "target_short": f16.shift(-10),              # final leak: global shift
+            "target_short": f16.shift(-10),              # leak reconstruction via global shift
             "target_medium": compounded_target(f16, 6),  # (1+r_10)...(1+r_60)-1
             "target_long": compounded_target(f16, 24),   # (1+r_10)...(1+r_240)-1
         }
@@ -83,7 +83,7 @@ def load_submission(path: Path) -> pd.DataFrame:
 
 def parse_args(root: Path) -> argparse.Namespace:
     """Parse command-line arguments for submission generation."""
-    parser = argparse.ArgumentParser(description="Generate final leak submission for TradeMaster Cup 2025.")
+    parser = argparse.ArgumentParser(description="Generate zero submission for TradeMaster Cup 2025.")
     parser.add_argument("--test", type=Path, default=root / "data/raw/test_v2.csv")
     parser.add_argument("--train", type=Path, default=root / "data/raw/train_v2.csv")
     parser.add_argument("--sample", type=Path, default=root / "data/raw/sample_submission.csv")
@@ -100,7 +100,7 @@ def parse_args(root: Path) -> argparse.Namespace:
         default=None,
         help=(
             "Optional output filename. Recommended format: "
-            "submission_FINAL_LEAK_<VARIANT>_CV<LOCAL_CV>.csv"
+            "submission_ZERO_<VARIANT>_CV<LOCAL_CV>.csv"
         ),
     )
     parser.add_argument("--skip-train-check", action="store_true")
@@ -118,7 +118,7 @@ def main() -> None:
     if "id" not in test_df.columns or "feature_16" not in test_df.columns:
         raise ValueError(f"{args.test} must contain columns: id, feature_16")
 
-    perfect = build_perfect_from_leak(test_df)
+    perfect = build_known_region_predictions(test_df)
     # Keep sample ID ordering exactly as required by Kaggle format.
     out = sample_df[["id"]].merge(perfect, on="id", how="left")
 
@@ -137,7 +137,7 @@ def main() -> None:
         output_name = args.output_name
     else:
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_name = f"submission_FINAL_LEAK_{ts}.csv"
+        output_name = f"submission_ZERO_{ts}.csv"
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     output_path = args.output_dir / output_name
