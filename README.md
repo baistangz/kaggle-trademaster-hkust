@@ -8,6 +8,7 @@ This repository contains the final reproducible scripts used in competition.
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tail_variants.py`: deterministic tail priors (`zero`, `expanding_all`).
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tailvar_macro_specialist.py`: macro ridge tail model.
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/generate_tailvar_robust_anchor.py`: robust anchor blend (macro + expanding).
+- `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/helper/run_sanity_checks.py`: deterministic sanity checks (leak formulas, tail coverage, schema).
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/helper/compare_boundary_cv.py`: boundary CV comparison.
 - `/Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/helper/verify_minute27_cutoff.py`: cutoff alignment check.
 
@@ -39,6 +40,11 @@ Examples:
 If a script is run without `--output-name`, it may append a timestamp for uniqueness. For report/code examples, keep the naming convention above.
 
 ## Run Commands
+
+### 0) Sanity Checks
+```bash
+python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/helper/run_sanity_checks.py
+```
 
 ### 1) Baseline Pure-ML
 ```bash
