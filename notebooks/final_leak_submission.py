@@ -87,12 +87,11 @@ def parse_args(root: Path) -> argparse.Namespace:
     parser.add_argument("--test", type=Path, default=root / "data/raw/test_v2.csv")
     parser.add_argument("--train", type=Path, default=root / "data/raw/train_v2.csv")
     parser.add_argument("--sample", type=Path, default=root / "data/raw/sample_submission.csv")
-    # Hardcoded fallback model
     parser.add_argument(
         "--fallback",
         type=Path,
-        default=root / "submissions" / "submission_Ensemble_Ref50_Rob50_CV0.67173_20260223_154015.csv",
-        help="Optional fallback submission for tail NaNs.",
+        default=root / "data/raw/sample_submission.csv",
+        help="Optional fallback submission for tail NaNs. Defaults to the host all-zero sample submission.",
     )
     parser.add_argument("--output-dir", type=Path, default=root / "submissions")
     parser.add_argument(

@@ -144,7 +144,7 @@ def run_cutoff(
 
 def main() -> None:
     """Entry point for cutoff-27 vs cutoff-239 comparison."""
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[2]
     tr = pd.read_csv(root / "data" / "raw" / "train_v2.csv")
     f16 = tr["feature_16"].to_numpy(dtype="float64")
     date = tr["date_id"].to_numpy()

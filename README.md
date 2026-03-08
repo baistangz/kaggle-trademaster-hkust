@@ -51,17 +51,18 @@ python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/helper/run_s
 ```bash
 python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/solution.py
 ```
+Long-running training script. Regenerates the pure-ML XGBoost family and 50/50 blend.
 
 ### 2) Archival Neural Baseline
 ```bash
 python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/archival_neural_baseline.py \
-  --output-name submission_RESNET_HONEST.csv
+  --output-name submission_resnet_honest.csv
 ```
+Long-running archival baseline. Included for report completeness rather than final submission generation.
 
 ### 3) Leak + Fallback Submission
 ```bash
 python3 /Users/baistan/Developer/kaggle-trademaster-hkust/notebooks/final_leak_submission.py \
-  --fallback /Users/baistan/Developer/kaggle-trademaster-hkust/submissions/submission_Ensemble_Ref50_Rob50_CV0.67173.csv \
   --output-name submission_FINAL_LEAK_FIXED_CV0.00005.csv
 ```
 

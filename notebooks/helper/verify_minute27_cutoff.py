@@ -14,7 +14,7 @@ import pandas as pd
 
 def main() -> None:
     """Load test index structure and print phase-alignment diagnostics."""
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[2]
     test = pd.read_csv(root / "data" / "raw" / "test_v2.csv", usecols=["date_id", "minute_id"])
 
     n = len(test)
