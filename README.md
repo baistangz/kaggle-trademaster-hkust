@@ -19,7 +19,7 @@ If you want the full write-up, you can read `report.pdf` in the repository root.
 
 ## What Is In This Repo
 
-### Main scripts
+### Main entrypoints
 - `notebooks/solution.py` - baseline pure-ML XGBoost pipeline.
 - `notebooks/generate_zero_submission.py` - generates the hard-zero fallback submission.
 - `notebooks/generate_tail_variants.py` - generates simple tail variants such as `zero` and `expanding_all`.
@@ -40,7 +40,7 @@ If you want the full write-up, you can read `report.pdf` in the repository root.
 - `report_overleaf/` - LaTeX report source, proof scripts, outputs, and mirrored code listings.
 - `scripts/sync_report_code.py` - syncs repo code into `report_overleaf/code/`.
 
-## Expected Data
+## Required Data
 Place the competition files under `data/raw/`:
 - `data/raw/train_v2.csv`
 - `data/raw/test_v2.csv`
