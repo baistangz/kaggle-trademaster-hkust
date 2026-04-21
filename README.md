@@ -8,6 +8,9 @@ The core idea was:
 
 The repo keeps the final submission generators, diagnostics, tests, and the report source in one place.
 
+## Report
+If you want the full write-up, you can read `report.pdf` in the repository root.
+
 ## What Is In This Repo
 
 ### Main scripts
