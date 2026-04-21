@@ -8,6 +8,12 @@ The core idea was:
 
 The repo keeps the final submission generators, diagnostics, tests, and the report source in one place.
 
+## Results
+- Final placement: 4th out of 57 teams in TradeMaster Cup 2025.
+- Main solution idea: reconstruct deterministic target regions exactly, then model only the small unknown tail.
+- Strong public submissions reached 0.0000 on the public leaderboard.
+- Private leaderboard analysis showed that final ranking depended on tiny tail-behavior differences rather than broad forecasting quality.
+
 ## Report
 If you want the full write-up, you can read `report.pdf` in the repository root.
 
